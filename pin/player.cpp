@@ -4499,10 +4499,14 @@ void Player::PrepareVideoBuffersNormal()
    }
 
    // Texture used for LUT color grading must be treated as if they were linear
+#if 0
    Texture * const pin = m_ptable->GetImage(m_ptable->m_imageColorGrade);
    if (pin)
       m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTexture(SHADER_tex_color_lut, pin, SF_BILINEAR, SA_CLAMP, SA_CLAMP, true); // FIXME honor the linear RGB in VR
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_color_grade, pin != nullptr);
+#else
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_color_grade, false);
+#endif
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_do_dither, !m_ditherOff);
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_do_bloom, m_ptable->m_bloom_strength > 0.0f && !m_bloomOff && infoMode <= IF_DYNAMIC_ONLY);
 
