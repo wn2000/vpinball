@@ -5170,6 +5170,8 @@ void Player::Render()
       if (localvsync != 1) // do nothing for 1, as already enforced during device set
          if (m_fps > localvsync*ADAPT_VSYNC_FACTOR)
             vsync = true;
+   
+   fprintf(stderr, "[DEBUG] FPS = %.1f\n", m_fps);
 
 #ifdef USE_IMGUI
    UpdateHUD_IMGUI();
