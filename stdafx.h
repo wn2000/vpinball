@@ -77,7 +77,7 @@
 #define MAX_TIMER_MSEC_INTERVAL 1 // amount of msecs to wait (at least) until same timer can be triggered again (e.g. they can fall behind, if set to > 1, as update cycle is 1000Hz)
 #define MAX_TIMERS_MSEC_OVERALL 5 // amount of msecs that all timers combined can take per frame (e.g. they can fall behind, if set to < somelargevalue)
 
-#define STEPPING                // enable Physics stepping
+// #define STEPPING                // enable Physics stepping
 
 #if defined(_DEBUG) && defined(STEPPING)
  #define MOUSEPAUSE
@@ -90,7 +90,7 @@
 
 //#define DEBUGPHYSICS          // enables detailed physics/collision handling output for the 'F11' stats/debug texts
 
-#define DEBUG_BALL_SPIN         // enables dots glued to balls if in 'F11' mode
+// #define DEBUG_BALL_SPIN         // enables dots glued to balls if in 'F11' mode
 
 //
 
