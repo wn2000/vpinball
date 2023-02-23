@@ -10,7 +10,7 @@ public:
    RenderTarget(RenderDevice* rd, const string& name, const int width, const int height, const colorFormat format, bool with_depth, int nMSAASamples, StereoMode stereo, const char* failureMessage, RenderTarget* sharedDepth = nullptr);
    ~RenderTarget();
 
-   void Activate(const bool ignoreStereo = false);
+   void Activate(bool ignoreStereo = false, bool clear = false);
    static RenderTarget* GetCurrentRenderTarget();
    static int RebindCount;
 

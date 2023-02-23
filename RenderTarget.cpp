@@ -362,7 +362,7 @@ void RenderTarget::CopyTo(RenderTarget* dest, const bool copyColor, const bool c
 #endif
 }
 
-void RenderTarget::Activate(const bool ignoreStereo)
+void RenderTarget::Activate(const bool ignoreStereo, const bool clear)
 {
 #ifdef ENABLE_SDL
    if (current_render_target == this && m_current_stereo_mode == (ignoreStereo ? STEREO_OFF : m_stereo))
@@ -377,7 +377,11 @@ void RenderTarget::Activate(const bool ignoreStereo)
       m_color_sampler->Unbind();
    if (m_depth_sampler)
       m_depth_sampler->Unbind();
+
    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+   if (clear)
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
    switch (ignoreStereo ? STEREO_OFF : m_stereo)
    {
    case STEREO_OFF:
