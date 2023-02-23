@@ -3473,7 +3473,7 @@ void Player::RenderDynamics()
    }
 
    // Update Bulb light buffer
-   DrawBulbLightBuffer();
+   // DrawBulbLightBuffer();
    if (GetProfilingMode() == PF_ENABLED)
       m_pin3d.m_gpu_profiler.Timestamp(GTS_LightBuffer);
 
