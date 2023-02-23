@@ -23,6 +23,8 @@
  #define stable_sort std::stable_sort
 #endif
 
+#define GL_ALL_BUFFERS GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT
+
 // utility structure for realtime plot //!! cleanup
 class ScrollingData {
 private:
@@ -3487,7 +3489,7 @@ void Player::RenderDynamics()
    if (m_dynamicMode)
       DrawStatics();
 
-   DrawDynamics(true);
+   DrawDynamics(false);
 
    m_pin3d.m_pd3dPrimaryDevice->basicShader->SetTextureNull(SHADER_tex_base_transmission); // need to reset the bulb light texture, as its used as render target for bloom again
 
@@ -4514,7 +4516,13 @@ void Player::PrepareVideoBuffersNormal()
    const float jitter = (float)((msec() & 2047) / 1000.0);
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetVector(SHADER_w_h_height, (float)(1.0 / render_w), (float)(1.0 / render_h),
       (float)jitter /* radical_inverse(jittertime) * 11.0f */, (float)jitter /*sobol(jittertime)*13.0f*/); // jitter for dither pattern
-   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTechnique(useAA || infoMode == IF_RENDER_PROBES ? SHADER_TECHNIQUE_fb_tonemap : (m_BWrendering == 1 ? SHADER_TECHNIQUE_fb_tonemap_no_filterRG : (m_BWrendering == 2 ? SHADER_TECHNIQUE_fb_tonemap_no_filterR : SHADER_TECHNIQUE_fb_tonemap_no_filterRGB)));
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTechnique(
+      useAA || infoMode == IF_RENDER_PROBES ? SHADER_TECHNIQUE_fb_tonemap
+       : (m_BWrendering == 1 ? SHADER_TECHNIQUE_fb_tonemap_no_filterRG
+       : (m_BWrendering == 2 ? SHADER_TECHNIQUE_fb_tonemap_no_filterR
+       // : SHADER_TECHNIQUE_fb_tonemap_no_filterRGB
+       : SHADER_TECHNIQUE_fb_none
+       )));
 
    m_pin3d.m_pd3dPrimaryDevice->FBShader->Begin();
    const float shiftedVerts[4 * 5] =
@@ -4569,7 +4577,7 @@ void Player::PrepareVideoBuffersNormal()
       UpdateCameraModeDisplay();
 
 #ifdef USE_IMGUI
-   RenderHUD_IMGUI();
+   // RenderHUD_IMGUI();
 #else
    UpdateHUD();
 #endif
@@ -4585,7 +4593,7 @@ void Player::FlipVideoBuffers(const bool vsync)
    // switch to texture output buffer again
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTextureNull(SHADER_tex_fb_filtered);
    m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTextureNull(SHADER_tex_fb_unfiltered);
-   m_pin3d.m_pd3dPrimaryDevice->GetMSAABackBufferTexture()->Activate();
+   m_pin3d.m_pd3dPrimaryDevice->GetMSAABackBufferTexture()->Activate(/*ignoreStereo=*/false, /*clear=*/true);
 
    m_lastFlipTime = usec();
 }
@@ -5180,7 +5188,7 @@ void Player::Render()
    fprintf(stderr, "[DEBUG] FPS = %.1f, rebind = %d\n", m_fps, RenderTarget::RebindCount);
 
 #ifdef USE_IMGUI
-   UpdateHUD_IMGUI();
+   // UpdateHUD_IMGUI();
 #endif
 
    if (GetAOMode() == 2)
@@ -5608,18 +5616,18 @@ void Player::DrawDynamics(bool onlyBalls)
          }
 
       // Draw non-transparent DMD's
-      m_render_mask |= OPAQUE_DMD_PASS;
-      for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
-         if (m_vHitNonTrans[i]->IsDMD())
-         {
-            m_vHitNonTrans[i]->RenderDynamic();
-            #ifdef DEBUG
-            m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
-            assert(initial_state.state == live_state.state);
-            assert(initial_state.depth_bias == live_state.depth_bias);
-            #endif
-         }
-      m_render_mask &= ~OPAQUE_DMD_PASS;
+      // m_render_mask |= OPAQUE_DMD_PASS;
+      // for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
+      //    if (m_vHitNonTrans[i]->IsDMD())
+      //    {
+      //       m_vHitNonTrans[i]->RenderDynamic();
+      //       #ifdef DEBUG
+      //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
+      //       assert(initial_state.state == live_state.state);
+      //       assert(initial_state.depth_bias == live_state.depth_bias);
+      //       #endif
+      //    }
+      // m_render_mask &= ~OPAQUE_DMD_PASS;
 
       // Balls must be rendered after (non transparent) kickers since kickers perform a depth shift (to be visible despite the playfield) that would render them above the ball otherwise
       DrawBalls();
@@ -5630,30 +5638,30 @@ void Player::DrawDynamics(bool onlyBalls)
       m_limiter.Execute(m_pin3d.m_pd3dPrimaryDevice); //!! move below other draw calls??
 
       // Draw transparent objects. No DMD's
-      for (size_t i = 0; i < m_vHitTrans.size(); ++i)
-         if (!m_vHitTrans[i]->IsDMD())
-         {
-            m_vHitTrans[i]->RenderDynamic();
-            #ifdef DEBUG
-            m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
-            assert(initial_state.state == live_state.state);
-            assert(initial_state.depth_bias == live_state.depth_bias);
-            #endif
-         }
+      // for (size_t i = 0; i < m_vHitTrans.size(); ++i)
+      //    if (!m_vHitTrans[i]->IsDMD())
+      //    {
+      //       m_vHitTrans[i]->RenderDynamic();
+      //       #ifdef DEBUG
+      //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
+      //       assert(initial_state.state == live_state.state);
+      //       assert(initial_state.depth_bias == live_state.depth_bias);
+      //       #endif
+      //    }
 
       // Draw only transparent DMD's
-      m_render_mask |= TRANSPARENT_DMD_PASS;
-      for (size_t i = 0; i < m_vHitNonTrans.size(); ++i) // NonTrans is correct as DMDs are always sorted in there
-         if (m_vHitNonTrans[i]->IsDMD())
-         {
-            m_vHitNonTrans[i]->RenderDynamic();
-            #ifdef DEBUG
-            m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
-            assert(initial_state.state == live_state.state);
-            assert(initial_state.depth_bias == live_state.depth_bias);
-            #endif
-         }
-      m_render_mask &= ~TRANSPARENT_DMD_PASS;
+      // m_render_mask |= TRANSPARENT_DMD_PASS;
+      // for (size_t i = 0; i < m_vHitNonTrans.size(); ++i) // NonTrans is correct as DMDs are always sorted in there
+      //    if (m_vHitNonTrans[i]->IsDMD())
+      //    {
+      //       m_vHitNonTrans[i]->RenderDynamic();
+      //       #ifdef DEBUG
+      //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
+      //       assert(initial_state.state == live_state.state);
+      //       assert(initial_state.depth_bias == live_state.depth_bias);
+      //       #endif
+      //    }
+      // m_render_mask &= ~TRANSPARENT_DMD_PASS;
 
       if (GetProfilingMode() == PF_ENABLED)
          m_pin3d.m_gpu_profiler.Timestamp(GTS_Transparent);
