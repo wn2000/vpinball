@@ -112,13 +112,8 @@ VPinMAMEController::VPinMAMEController()
       nullptr 
    };
 
-#if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)) || defined(__ANDROID__)
    strncpy((char*)config.vpmPath, g_pvp->m_szMyPath.c_str(), PINMAME_MAX_VPM_PATH);
    strncat((char*)config.vpmPath, "pinmame/", PINMAME_MAX_VPM_PATH);
-#else
-   strncpy((char*)config.vpmPath, getenv("HOME"), PINMAME_MAX_VPM_PATH);
-   strncat((char*)config.vpmPath, "/.pinmame/", PINMAME_MAX_VPM_PATH);
-#endif
 
    PinmameSetConfig(&config);
 
