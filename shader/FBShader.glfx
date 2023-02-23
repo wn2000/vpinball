@@ -323,6 +323,16 @@ void main()
    color = float4(result, 1.0);
 }
 
+////ps_main_fb_none
+
+in vec2 tex0;
+
+void main()
+{
+   float3 result = texNoLod(tex_fb_unfiltered, tex0).xyz;
+   color = float4(result, 1.0);
+}
+
 ////ps_main_fb_tonemap_no_filter
 
 in vec2 tex0;
@@ -754,6 +764,7 @@ fb_AO:P0:vs_main_no_trafo_subpixel():ps_main_fb_AO()
 fb_tonemap_AO:P0:vs_main_no_trafo_subpixel():ps_main_fb_tonemap_AO()
 fb_tonemap_AO_static:P0:vs_main_no_trafo_subpixel():ps_main_fb_tonemap_AO_static()
 
+fb_none:P0:vs_main_no_trafo():ps_main_fb_none()
 fb_tonemap_no_filter:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filter()
 fb_tonemap_no_filterRGB:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filterRGB()
 fb_tonemap_no_filterRG:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filterRG()
