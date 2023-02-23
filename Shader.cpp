@@ -99,6 +99,7 @@ const string Shader::shaderTechniqueNames[SHADER_TECHNIQUE_COUNT]
    SHADER_TECHNIQUE(fb_AO),
    SHADER_TECHNIQUE(fb_tonemap_AO),
    SHADER_TECHNIQUE(fb_tonemap_AO_static),
+   SHADER_TECHNIQUE(fb_tonemap_no_filter),
    SHADER_TECHNIQUE(fb_tonemap_no_filterRGB),
    SHADER_TECHNIQUE(fb_tonemap_no_filterRG),
    SHADER_TECHNIQUE(fb_tonemap_no_filterR),

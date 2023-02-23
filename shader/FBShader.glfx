@@ -754,6 +754,7 @@ fb_AO:P0:vs_main_no_trafo_subpixel():ps_main_fb_AO()
 fb_tonemap_AO:P0:vs_main_no_trafo_subpixel():ps_main_fb_tonemap_AO()
 fb_tonemap_AO_static:P0:vs_main_no_trafo_subpixel():ps_main_fb_tonemap_AO_static()
 
+fb_tonemap_no_filter:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filter()
 fb_tonemap_no_filterRGB:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filterRGB()
 fb_tonemap_no_filterRG:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filterRG()
 fb_tonemap_no_filterR:P0:vs_main_no_trafo():ps_main_fb_tonemap_no_filterR()
