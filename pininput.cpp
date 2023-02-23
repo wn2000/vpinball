@@ -218,8 +218,31 @@ void PinInput::LoadSettings()
 }
 
 #ifdef __STANDALONE__
-void PinInput::SetupSDLGameController()
+void PinInput::SetupSDLGameController(const SDL_Event& e)
 {
+   if (e.type == SDL_CONTROLLERDEVICEADDED)
+   {
+      SDL_GameController* controller = SDL_GameControllerOpen(e.cdevice.which);
+      if (!controller)
+      {
+         PLOGE.printf("Error opening game controller %d: %s.", e.cdevice.which, SDL_GetError());
+      }
+      else
+      {
+         PLOGI.printf("Game controller added: name=%s, rumble=%s",
+                      SDL_GameControllerName(controller),
+                      SDL_GameControllerHasRumble(controller) ? "true" : "false");
+      }
+      return;
+   }
+
+   if (e.type == SDL_CONTROLLERDEVICEREMOVED)
+   {
+      SDL_GameControllerClose(SDL_GameControllerFromInstanceID(e.cdevice.which));
+      return;
+   }
+
+#if 0
    if (m_gameController != nullptr) {
       SDL_GameControllerClose(m_gameController);
       m_gameController = nullptr;
@@ -248,6 +271,7 @@ void PinInput::SetupSDLGameController()
          }
       }
    }
+#endif
 }
 #endif
 
@@ -739,9 +763,9 @@ void PinInput::handleInputSDL(DIDEVICEOBJECTDATA *didod)
    static constexpr int axisMultiplier[] = { 2, 2, 2, 2, 256 , 256 };
    SDL_Event e;
    int j = 0;
-   while (SDL_PollEvent(&e) != 0 && j<32)
+   while (SDL_PollEvent(&e) != 0 && j < INPUT_BUFFER_SIZE)
    {
-#ifdef __STANDALONE__
+#if defined(__STANDALONE__) && defined(USE_IMGUI)
        ImGui_ImplSDL2_ProcessEvent(&e);
 #endif
       //User requests quit
@@ -818,7 +842,7 @@ void PinInput::handleInputSDL(DIDEVICEOBJECTDATA *didod)
 #ifdef __STANDALONE__
       case SDL_CONTROLLERDEVICEADDED:
       case SDL_CONTROLLERDEVICEREMOVED:
-         SetupSDLGameController();
+         SetupSDLGameController(e);
          break;
       case SDL_CONTROLLERBUTTONDOWN:
       case SDL_CONTROLLERBUTTONUP:

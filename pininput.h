@@ -199,7 +199,7 @@ private:
    SDL_Haptic* m_rumbleDeviceSDL;
 #ifdef __STANDALONE__
    SDL_GameController* m_gameController;
-   void SetupSDLGameController();
+   void SetupSDLGameController(const SDL_Event& e);
 #endif
 #endif
 #ifdef ENABLE_IGAMECONTROLLER
