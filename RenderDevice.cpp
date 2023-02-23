@@ -1650,6 +1650,8 @@ void RenderDevice::Flip(const bool vsync)
 
    m_frameLockCalls = m_curLockCalls;
    m_curLockCalls = 0;
+
+   RenderTarget::RebindCount = 0;
 }
 
 void RenderDevice::UploadAndSetSMAATextures()

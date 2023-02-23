@@ -16,6 +16,7 @@ int RenderTarget::m_current_stereo_mode = -1;
 
 RenderTarget* RenderTarget::current_render_target = nullptr;
 RenderTarget* RenderTarget::GetCurrentRenderTarget() { return current_render_target; }
+int RenderTarget::RebindCount = 0;
 
 RenderTarget::RenderTarget(RenderDevice* rd, int width, int height, colorFormat format)
    : m_name("BackBuffer"s)
@@ -366,6 +367,10 @@ void RenderTarget::Activate(const bool ignoreStereo)
 #ifdef ENABLE_SDL
    if (current_render_target == this && m_current_stereo_mode == (ignoreStereo ? STEREO_OFF : m_stereo))
       return;
+   
+   RebindCount++;
+   fprintf(stderr, "[DEBUG] rebind: %s\n", m_name.c_str());
+
    m_current_stereo_mode = ignoreStereo ? STEREO_OFF : m_stereo;
    static GLfloat viewPorts[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
    if (m_color_sampler)

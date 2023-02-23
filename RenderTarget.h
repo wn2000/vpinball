@@ -12,6 +12,7 @@ public:
 
    void Activate(const bool ignoreStereo = false);
    static RenderTarget* GetCurrentRenderTarget();
+   static int RebindCount;
 
    Sampler* GetColorSampler() { return m_color_sampler; }
    void UpdateDepthSampler();
