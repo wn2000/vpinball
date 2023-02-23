@@ -1340,7 +1340,16 @@ void RenderDevice::SwapAORenderTargets()
 void RenderDevice::ResolveMSAA()
 { 
    if (m_pOffscreenMSAABackBufferTexture != m_pOffscreenBackBufferTexture)
+   {
       m_pOffscreenMSAABackBufferTexture->CopyTo(m_pOffscreenBackBufferTexture);
+      const GLenum attachments[]{GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT};
+      glInvalidateFramebuffer(GL_FRAMEBUFFER, 2, attachments);
+   }
+   else
+   {
+      const GLenum attachments[]{GL_DEPTH_ATTACHMENT};
+      glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, attachments);
+   }
 }
 
 bool RenderDevice::DepthBufferReadBackAvailable()
