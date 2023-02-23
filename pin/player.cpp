@@ -3487,7 +3487,7 @@ void Player::RenderDynamics()
    if (m_dynamicMode)
       DrawStatics();
 
-   DrawDynamics(false);
+   DrawDynamics(true);
 
    m_pin3d.m_pd3dPrimaryDevice->basicShader->SetTextureNull(SHADER_tex_base_transmission); // need to reset the bulb light texture, as its used as render target for bloom again
 
@@ -5166,10 +5166,12 @@ void Player::Render()
       localvsync = m_refreshrate;
 
    bool vsync = false;
+#if 0
    if (localvsync > 0)
       if (localvsync != 1) // do nothing for 1, as already enforced during device set
          if (m_fps > localvsync*ADAPT_VSYNC_FACTOR)
             vsync = true;
+#endif
    
    fprintf(stderr, "[DEBUG] FPS = %.1f\n", m_fps);
 
