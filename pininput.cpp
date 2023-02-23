@@ -1029,7 +1029,7 @@ void PinInput::Init(const HWND hwnd)
       }
       uShockType = USHOCKTYPE_GENERIC;
 #else
-    SetupSDLGameController();
+    // SetupSDLGameController();
 #endif
 #else
       m_inputApi = 0;
