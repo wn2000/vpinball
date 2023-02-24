@@ -5,25 +5,23 @@
 #endif
 
 #ifdef USE_IMGUI
- #include "imgui/imgui.h"
- #ifdef ENABLE_SDL
-  #include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui.h"
+#ifdef ENABLE_SDL
+#include "imgui/imgui_impl_opengl3.h"
 #ifdef __STANDALONE__
-  #include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdl.h"
 #endif
- #else
-  #include "imgui/imgui_impl_dx9.h"
- #endif
- #include "imgui/imgui_impl_win32.h"
- #include "imgui/implot/implot.h"
+#else // ENABLE_SDL ?
+#include "imgui/imgui_impl_dx9.h"
+#endif
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/implot/implot.h"
 
 #if __cplusplus >= 202002L && !defined(__clang__)
- #define stable_sort std::ranges::stable_sort
+#define stable_sort std::ranges::stable_sort
 #else
- #define stable_sort std::stable_sort
+#define stable_sort std::stable_sort
 #endif
-
-#define GL_ALL_BUFFERS GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT
 
 // utility structure for realtime plot //!! cleanup
 class ScrollingData {
@@ -78,8 +76,7 @@ public:
         Data.push_back(ImVec2(xmod, y));
     }
 };*/
-#endif
-
+#endif // USE_IMGUI
 
 #include <algorithm>
 #include <ctime>
@@ -4122,9 +4119,9 @@ void Player::RenderHUD_IMGUI()
    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 #endif
 }
+#endif
 
-#else
-
+#if 0
 void Player::UpdateHUD()
 {
     // set debug output pos for left aligned text
@@ -4577,8 +4574,9 @@ void Player::PrepareVideoBuffersNormal()
       UpdateCameraModeDisplay();
 
 #ifdef USE_IMGUI
-   // RenderHUD_IMGUI();
-#else
+   RenderHUD_IMGUI();
+#endif
+#if 0
    UpdateHUD();
 #endif
 
@@ -4763,9 +4761,8 @@ void Player::PrepareVideoBuffersAO()
 
 #ifdef USE_IMGUI
    RenderHUD_IMGUI();
-#else
-   UpdateHUD();
 #endif
+   // UpdateHUD();
 
    m_pin3d.m_pd3dPrimaryDevice->EndScene();
 }
@@ -5188,7 +5185,7 @@ void Player::Render()
    fprintf(stderr, "[DEBUG] FPS = %.1f, rebind = %d\n", m_fps, RenderTarget::RebindCount);
 
 #ifdef USE_IMGUI
-   // UpdateHUD_IMGUI();
+   UpdateHUD_IMGUI();
 #endif
 
    if (GetAOMode() == 2)
