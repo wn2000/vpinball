@@ -5182,7 +5182,7 @@ void Player::Render()
             vsync = true;
 #endif
    
-   fprintf(stderr, "[DEBUG] FPS = %.1f, rebind = %d\n", m_fps, RenderTarget::RebindCount);
+   fprintf(stderr, "[DEBUG] frame time = %.1f ms, rebind = %d\n", 1000.f / m_fps, RenderTarget::RebindCount);
 
 #ifdef USE_IMGUI
    UpdateHUD_IMGUI();
