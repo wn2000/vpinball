@@ -2099,7 +2099,7 @@ void Player::InitStatic()
    // Now finalize static buffer with static AO
    if (GetAOMode() == 1)
    {
-      const bool useAA = ((m_AAfactor != 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
+      const bool useAA = ((m_AAfactor > 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
 
       m_pin3d.m_pddsStatic->CopyTo(m_pin3d.m_pd3dPrimaryDevice->GetBackBufferTexture()); // save Z buffer and render (cannot be called inside BeginScene -> EndScene cycle)
 
@@ -4406,7 +4406,7 @@ void Player::UpdateHUD()
 
 void Player::PrepareVideoBuffersNormal()
 {
-   const bool useAA = ((m_AAfactor != 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
+   const bool useAA = ((m_AAfactor > 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
    const bool stereo= m_stereo3D == STEREO_VR || ((m_stereo3D != STEREO_OFF) && m_stereo3Denabled && m_pin3d.m_pd3dPrimaryDevice->DepthBufferReadBackAvailable());
 #ifdef ENABLE_SDL
    const bool PostProcAA = true;
@@ -4598,7 +4598,7 @@ void Player::FlipVideoBuffers(const bool vsync)
 
 void Player::PrepareVideoBuffersAO()
 {
-   const bool useAA = ((m_AAfactor != 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
+   const bool useAA = ((m_AAfactor > 1.0f) && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1);
    const bool stereo= m_stereo3D == STEREO_VR || ((m_stereo3D != STEREO_OFF) && m_stereo3Denabled && m_pin3d.m_pd3dPrimaryDevice->DepthBufferReadBackAvailable());
 #ifdef ENABLE_SDL
    const bool PostProcAA = true;
