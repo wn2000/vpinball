@@ -2005,7 +2005,7 @@ void Player::InitStatic()
    // The code will fail if the static render target is MSAA (the copy operation we are performing is not allowed)
    assert(!m_pin3d.m_pddsStatic->IsMSAA());
    
-   RenderTarget *accumulationSurface = m_dynamicMode ? nullptr : m_pin3d.m_pddsStatic->Duplicate("Accumulation"s);
+   RenderTarget *accumulationSurface = m_dynamicMode ? nullptr : m_pin3d.m_pddsStatic->Duplicate("Accumulation"s, colorFormat::RGBA16F);
 
    // if rendering static/with heavy oversampling, disable the aniso/trilinear filter to get a sharper/more precise result overall!
    if (!m_dynamicMode)
@@ -2073,7 +2073,6 @@ void Player::InitStatic()
          m_pin3d.m_pd3dPrimaryDevice->FBShader->End();
          m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTextureNull(SHADER_tex_fb_unfiltered);
          m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(false, initial_state);
-         m_pin3d.m_pddsStatic->Activate();
       }
 
       // Finish the frame.

@@ -302,6 +302,12 @@ RenderTarget* RenderTarget::Duplicate(const string& name, const bool shareDepthS
    return new RenderTarget(m_rd, name, m_width, m_height, m_format, m_has_depth, m_nMSAASamples, m_stereo, "Failed to duplicate render target", shareDepthSurface ? this : nullptr);
 }
 
+RenderTarget* RenderTarget::Duplicate(const string& name, colorFormat format, const bool shareDepthSurface)
+{
+   assert(!m_is_back_buffer);
+   return new RenderTarget(m_rd, name, m_width, m_height, format, m_has_depth, m_nMSAASamples, m_stereo, "Failed to duplicate render target", shareDepthSurface ? this : nullptr);
+}
+
 void RenderTarget::CopyTo(RenderTarget* dest, const bool copyColor, const bool copyDepth)
 {
    int w1 = GetWidth(), h1 = GetHeight(), w2 = dest->GetWidth(), h2 = dest->GetHeight();

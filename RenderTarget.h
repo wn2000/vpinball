@@ -18,7 +18,8 @@ public:
    void UpdateDepthSampler();
    Sampler* GetDepthSampler() { return m_depth_sampler; }
 
-   RenderTarget* Duplicate(const string& name, const bool shareDepthSurface = false);
+   RenderTarget* Duplicate(const string& name, bool shareDepthSurface = false);
+   RenderTarget* Duplicate(const string& name, colorFormat format, bool shareDepthSurface = false);
    void CopyTo(RenderTarget* dest, const bool copyColor = true, const bool copyDepth = true);
 
    void SetSize(const int w, const int h) { assert(m_is_back_buffer); m_width = w; m_height = h; }
