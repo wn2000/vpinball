@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#include <time.h>
+#include <chrono>
+#include <thread>
 
 //#define USE_LOWLEVEL_PRECISION_SETTING // does allow to pick lower windows timer resolutions than 1ms (usually 0.5ms as of win10/2020) via undocumented API calls, BUT lead to sound distortion on some setups in PinMAME, so also disable it in VPX for now
 
@@ -78,53 +79,24 @@ void restore_win_timer_resolution()
 #endif
 }
 
-//
-
-static unsigned int sTimerInit = 0;
-static LARGE_INTEGER TimerFreq;
-static LARGE_INTEGER sTimerStart;
+static std::chrono::steady_clock::time_point sTimerStart;
 
 // call before 1st use of msec,usec or uSleep
 void wintimer_init()
 {
-   sTimerInit = 1;
-
-#ifdef _MSC_VER
-   QueryPerformanceFrequency(&TimerFreq);
-   QueryPerformanceCounter(&sTimerStart);
-#else
-   TimerFreq.QuadPart = SDL_GetPerformanceFrequency();
-   sTimerStart.QuadPart = SDL_GetPerformanceCounter();
-#endif
+   sTimerStart = std::chrono::steady_clock::now();
 }
 
 unsigned long long usec()
 {
-   if (sTimerInit == 0) return 0;
-
-   LARGE_INTEGER TimerNow;
-#ifdef _MSC_VER
-   QueryPerformanceCounter(&TimerNow);
-#else
-   TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   const unsigned long long cur_tick = (unsigned long long)(TimerNow.QuadPart - sTimerStart.QuadPart);
-   return ((unsigned long long)TimerFreq.QuadPart < 100000000ull) ? (cur_tick * 1000000ull / (unsigned long long)TimerFreq.QuadPart)
-      : (cur_tick * 1000ull / ((unsigned long long)TimerFreq.QuadPart / 1000ull));
+   using namespace std::chrono;
+   return duration_cast<microseconds>(steady_clock::now() - sTimerStart).count();
 }
 
 U32 msec()
 {
-   if (sTimerInit == 0) return 0;
-
-   LARGE_INTEGER TimerNow;
-#ifdef _MSC_VER
-   QueryPerformanceCounter(&TimerNow);
-#else
-   TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   const LONGLONG cur_tick = TimerNow.QuadPart - sTimerStart.QuadPart;
-   return (U32)((unsigned long long)cur_tick * 1000ull / (unsigned long long)TimerFreq.QuadPart);
+   using namespace std::chrono;
+   return duration_cast<milliseconds>(steady_clock::now() - sTimerStart).count();
 }
 
 // tries(!) to be as exact as possible at the cost of potentially causing trouble with other threads/cores due to OS madness
@@ -132,61 +104,8 @@ U32 msec()
 // but VP code does this already
 void uSleep(const unsigned long long u)
 {
-   if (sTimerInit == 0) return;
-
-   LARGE_INTEGER TimerNow;
-#ifdef _MSC_VER
-   QueryPerformanceCounter(&TimerNow);
-#else
-   TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   LARGE_INTEGER TimerEnd;
-   TimerEnd.QuadPart = TimerNow.QuadPart + ((u * TimerFreq.QuadPart) / 1000000ull);
-   const LONGLONG TwoMSTimerTicks = (2000 * TimerFreq.QuadPart) / 1000000ull;
-
-   while (TimerNow.QuadPart < TimerEnd.QuadPart)
-   {
-      if ((TimerEnd.QuadPart - TimerNow.QuadPart) > TwoMSTimerTicks)
-         Sleep(1); // really pause thread for 1-2ms (depending on OS)
-      else
-         YieldProcessor(); // was: "SwitchToThread() let other threads on same core run" //!! could also try Sleep(0) or directly use _mm_pause() instead of YieldProcessor() here
-
-#ifdef _MSC_VER
-      QueryPerformanceCounter(&TimerNow);
-#else
-      TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   }
+   std::this_thread::sleep_for(std::chrono::microseconds(u));
 }
-
-// can sleep too long by 1000 to 2000 (=1 to 2ms)
-// needs timeBeginPeriod(1) before calling 1st time to make the Sleep(1) in here behave more or less accurately (and timeEndPeriod(1) after not needing that precision anymore)
-// but VP code does this already
-void uOverSleep(const unsigned long long u)
-{
-   if (sTimerInit == 0) return;
-
-   LARGE_INTEGER TimerNow;
-#ifdef _MSC_VER
-   QueryPerformanceCounter(&TimerNow);
-#else
-   TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   LARGE_INTEGER TimerEnd;
-   TimerEnd.QuadPart = TimerNow.QuadPart + ((u * TimerFreq.QuadPart) / 1000000ull);
-
-   while (TimerNow.QuadPart < TimerEnd.QuadPart)
-   {
-      Sleep(1); // really pause thread for 1-2ms (depending on OS)
-#ifdef _MSC_VER
-      QueryPerformanceCounter(&TimerNow);
-#else
-      TimerNow.QuadPart = SDL_GetPerformanceCounter();
-#endif
-   }
-}
-
-//
 
 static constexpr unsigned int daysPerMonths[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // Number of days per month
 
