@@ -762,6 +762,10 @@ void Player::OnInitialUpdate()
     const HRESULT result = Init();
     if (result != S_OK)
         throw 0; //!! have a more specific code (that is catched in the VPinball PeekMessageA loop)?!
+   
+    m_physics_needs_update = false;
+    m_physics_exit = false;
+    m_physics_thread = std::make_unique<std::thread>(&Player::physicsLoop, this);
 }
 
 void Player::Shutdown()
@@ -2996,10 +3000,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
    } // end physics loop
 }
 
-void Player::UpdatePhysics()
+void Player::UpdatePhysics(U64 initial_time_usec)
 {
-   U64 initial_time_usec = usec();
-
    // DJRobX's crazy latency-reduction code
    U64 delta_frame = 0;
    if (m_minphyslooptime > 0 && m_lastFlipTime > 0)
@@ -5022,6 +5024,20 @@ void Player::LockForegroundWindow(const bool enable)
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+void Player::physicsLoop()
+{
+   while (!m_physics_exit)
+   {
+      std::unique_lock<std::mutex> lk(m_mutex_physics);
+      m_cv_physics.wait(lk, [this] { return m_physics_needs_update || m_physics_exit; });
+
+      if (m_physics_exit) return;
+      m_physics_needs_update = false;
+
+      UpdatePhysics(m_physics_target_time);
+   }
+}
+
 void Player::Render()
 {
    // Rendering outputs to m_pd3dPrimaryDevice->GetBackBufferTexture(). If MSAA is used, it is resolved as part of the rendering (i.e. this surface is NOT the MSAA rneder surface but its resolved copy)
@@ -5031,6 +5047,13 @@ void Player::Render()
    // In pause mode: input, physics, animation and audio are not processed but rendering is still performed. This allows to modify properties (transform, visibility,..) using the debugger and get direct feedback
 
    const U64 startRenderUsec = usec();
+
+   {
+      std::scoped_lock<std::mutex> lk(m_mutex_physics);
+      m_physics_needs_update = true;
+      m_physics_target_time = startRenderUsec;
+      m_cv_physics.notify_one();
+   }
 
    if (!m_pause)
       m_pininput.ProcessKeys(/*sim_msec,*/ -(int)(startRenderUsec / 1000)); // trigger key events mainly for VPM<->VP roundtrip
@@ -5103,8 +5126,10 @@ void Player::Render()
 
    // Physics/Timer updates, done at the last moment, especially to handle key input (VP<->VPM roundtrip) and animation triggers
    //if ( !cameraMode )
-   if (!m_pause && m_minphyslooptime == 0) // (vsync) latency reduction code not active? -> Do Physics Updates here
-      UpdatePhysics();
+
+   // TODO: testing
+   // if (!m_pause && m_minphyslooptime == 0) // (vsync) latency reduction code not active? -> Do Physics Updates here
+   //    UpdatePhysics(usec());
 
    m_overall_frames++;
 
@@ -5181,7 +5206,7 @@ void Player::Render()
             vsync = true;
 #endif
    
-   fprintf(stderr, "[DEBUG] frame time = %.1f ms, rebind = %d\n", 1000.f / m_fps, RenderTarget::RebindCount);
+   fprintf(stderr, "[DEBUG] frame time = %.1f ms, rebind = %d\n", m_lastFrameDuration / 1000.f, RenderTarget::RebindCount);
 
 #ifdef USE_IMGUI
    UpdateHUD_IMGUI();
@@ -5192,12 +5217,13 @@ void Player::Render()
    else
       PrepareVideoBuffersNormal();
 
-   // DJRobX's crazy latency-reduction code active? Insert some Physics updates before vsync'ing
-   if (!m_pause && m_minphyslooptime > 0)
-   {
-      UpdatePhysics();
-      m_pininput.ProcessKeys(/*sim_msec,*/ -(int)(startRenderUsec / 1000)); // trigger key events mainly for VPM<->VP rountrip
-   }
+   // TODO: testing
+   // // DJRobX's crazy latency-reduction code active? Insert some Physics updates before vsync'ing
+   // if (!m_pause && m_minphyslooptime > 0)
+   // {
+   //    UpdatePhysics(usec());
+   //    m_pininput.ProcessKeys(/*sim_msec,*/ -(int)(startRenderUsec / 1000)); // trigger key events mainly for VPM<->VP rountrip
+   // }
    FlipVideoBuffers(vsync);
 
    if (GetProfilingMode() != PF_DISABLED)
@@ -6564,6 +6590,14 @@ void Player::StopPlayer()
 
    LockForegroundWindow(false);
 #endif
+
+   if (m_physics_thread)
+   {
+      m_physics_exit = true;
+      m_cv_physics.notify_one();
+      m_physics_thread->join();
+      m_physics_thread.reset();
+   }
 }
 
 INT_PTR CALLBACK PauseProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

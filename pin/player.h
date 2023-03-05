@@ -1,5 +1,10 @@
 #pragma once
 
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 #include "kdtree.h"
 #include "quadtree.h"
 #include "Debugger.h"
@@ -323,7 +328,7 @@ private:
 
    void InitStatic();
 
-   void UpdatePhysics();
+   void UpdatePhysics(U64 target_time);
 
    void DrawBulbLightBuffer();
    void Bloom();
@@ -732,4 +737,12 @@ private:
    LPD3DXSPRITE m_fontSprite;
    RECT     m_fontRect;
 #endif
+
+  U64 m_physics_target_time;
+  std::unique_ptr<std::thread> m_physics_thread;
+  std::mutex m_mutex_physics;
+  std::condition_variable m_cv_physics;
+  std::atomic_bool m_physics_needs_update;
+  std::atomic_bool m_physics_exit;
+  void physicsLoop();
 };
