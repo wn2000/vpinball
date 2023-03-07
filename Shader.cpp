@@ -11,6 +11,9 @@
 #include "inc/robin_hood.h"
 #include <regex>
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 static ShaderTechniques m_bound_technique = ShaderTechniques::SHADER_TECHNIQUE_INVALID;
 #endif
 
@@ -1256,17 +1259,12 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
    bool success = true;
    ShaderTechnique* shader = nullptr;
    GLuint geometryShader = 0;
-   GLchar* geometrySource = nullptr;
    GLuint fragmentShader = 0;
-   GLchar* fragmentSource = nullptr;
 
    //Vertex Shader
-   GLchar* vertexSource = new GLchar[vertex.length() + 1];
-   memcpy((void*)vertexSource, vertex.c_str(), vertex.length());
-   vertexSource[vertex.length()] = 0;
-
+   const char *vertexSource[] = {vertex.c_str()};
    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-   glShaderSource(vertexShader, 1, &vertexSource, nullptr);
+   glShaderSource(vertexShader, 1, vertexSource, nullptr);
    glCompileShader(vertexShader);
 
    int result;
@@ -1286,7 +1284,7 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
       success = false;
 
 #ifdef __STANDALONE__
-      PLOGI.printf("vertex:\n\n%s\n\n", vertexSource);
+      PLOGI.printf("vertex:\n\n%s\n\n", vertexSource[0]);
 #endif
    }
 #ifndef __STANDALONE__
@@ -1319,12 +1317,9 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
 #endif
    //Fragment Shader
    if (success) {
-      fragmentSource = new GLchar[fragment.length() + 1];
-      memcpy((void*)fragmentSource, fragment.c_str(), fragment.length());
-      fragmentSource[fragment.length()] = 0;
-
+      const char *fragmentSource[] = {fragment.c_str()};
       fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-      glShaderSource(fragmentShader, 1, &fragmentSource, nullptr);
+      glShaderSource(fragmentShader, 1, fragmentSource, nullptr);
       glCompileShader(fragmentShader);
 
       glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
@@ -1343,7 +1338,7 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
          success = false;
 
 #ifdef __STANDALONE__
-         PLOGI.printf("fragment:\n\n%s\n\n", fragmentSource);
+         PLOGI.printf("fragment:\n\n%s\n\n", fragmentSource[0]);
 #endif
       }
    }
@@ -1377,8 +1372,8 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
          success = false;
 
 #ifdef __STANDALONE__
-         PLOGI.printf("vertex - %s\n\n", vertexSource);
-         PLOGI.printf("fragment - %s\n\n", fragmentSource);
+         PLOGI.printf("vertex - %s\n\n", vertex.c_str());
+         PLOGI.printf("fragment - %s\n\n", fragment.c_str());
 #endif
       }
    }
@@ -1401,9 +1396,6 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
       glDeleteShader(geometryShader);
    if (fragmentShader)
       glDeleteShader(fragmentShader);
-   delete [] fragmentSource;
-   delete [] geometrySource;
-   delete [] vertexSource;
 
    if (success) {
       shader = new ShaderTechnique { -1, shaderCodeName };
@@ -1415,6 +1407,7 @@ Shader::ShaderTechnique* Shader::compileGLShader(const ShaderTechniques techniqu
 
       int count = 0;
       glGetProgramiv(shaderprogram, GL_ACTIVE_UNIFORMS, &count);
+      PLOGI.printf("shader %s: %d uniforms", shaderCodeName.c_str(), count);
       char uniformName[256];
       for (int i = 0;i < count;++i) {
          GLenum type;
@@ -1649,28 +1642,60 @@ bool Shader::Load(const std::string& name, const BYTE* code, unsigned int codeSi
             }
             else
             {
-               string vertexShaderCode = vertex;
-               vertexShaderCode.append("\n//").append(_technique).append("\n//").append(element[2]).append("\n");
-               vertexShaderCode.append(analyzeFunction(m_shaderCodeName, _technique, element[2], values)).append("\0");
+               string vertexShaderCode;
+               string nativeShader = Shader::shaderPath + element[0] + ".vert";
+               if (fs::exists(nativeShader))
+               {
+                  PLOGI.printf("Found native shader %s.", nativeShader.c_str());
+                  std::ifstream f(nativeShader);
+                  vertexShaderCode = {std::istreambuf_iterator<char>(f), {}};
+               }
+               else
+               {
+                  vertexShaderCode = vertex;
+                  vertexShaderCode.append("\n//").append(_technique).append("\n//").append(element[2]).append("\n");
+                  vertexShaderCode.append(analyzeFunction(m_shaderCodeName, _technique, element[2], values)).append("\0");
 #ifdef __STANDALONE__
-               vertexShaderCode = preprocessGLShader(vertexShaderCode);
+                  vertexShaderCode = preprocessGLShader(vertexShaderCode);
 #endif
+               }
+
                string geometryShaderCode;
-               if (elem == 5 && element[3].length() > 0)
+               nativeShader = Shader::shaderPath + element[0] + ".geom";
+               if (fs::exists(nativeShader))
+               {
+                  PLOGI.printf("Found native shader %s.", nativeShader.c_str());
+                  std::ifstream f(nativeShader);
+                  geometryShaderCode = {std::istreambuf_iterator<char>(f), {}};
+               }
+               else if (elem == 5 && element[3].length() > 0)
                {
                   geometryShaderCode = geometry;
                   geometryShaderCode.append("\n//").append(_technique).append("\n//").append(element[3]).append("\n");
                   geometryShaderCode.append(analyzeFunction(m_shaderCodeName, _technique, element[3], values)).append("\0");
+#ifdef __STANDALONE__
+                  geometryShaderCode = preprocessGLShader(geometryShaderCode);
+#endif
                }
+
+               string fragmentShaderCode;
+               nativeShader = Shader::shaderPath + element[0] + ".frag";
+               if (fs::exists(nativeShader))
+               {
+                  PLOGI.printf("Found native shader %s.", nativeShader.c_str());
+                  std::ifstream f(nativeShader);
+                  fragmentShaderCode = {std::istreambuf_iterator<char>(f), {}};
+               }
+               else
+               {
+                  fragmentShaderCode = fragment;
+                  fragmentShaderCode.append("\n//").append(_technique).append("\n//").append(element[elem - 1]).append("\n");
+                  fragmentShaderCode.append(analyzeFunction(m_shaderCodeName, _technique, element[elem - 1], values)).append("\0");
 #ifdef __STANDALONE__
-               geometryShaderCode = preprocessGLShader(geometryShaderCode);
+                  fragmentShaderCode = preprocessGLShader(fragmentShaderCode);
 #endif
-               string fragmentShaderCode = fragment;
-               fragmentShaderCode.append("\n//").append(_technique).append("\n//").append(element[elem - 1]).append("\n");
-               fragmentShaderCode.append(analyzeFunction(m_shaderCodeName, _technique, element[elem - 1], values)).append("\0");
-#ifdef __STANDALONE__
-               fragmentShaderCode = preprocessGLShader(fragmentShaderCode);
-#endif
+               }
+
                ShaderTechnique* build = compileGLShader(technique, m_shaderCodeName, element[0] /*.append("_").append(element[1])*/, vertexShaderCode, geometryShaderCode, fragmentShaderCode);
                if (build != nullptr)
                {
