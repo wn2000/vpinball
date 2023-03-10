@@ -3296,7 +3296,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szTableName = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3304,7 +3304,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szAuthor = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3312,7 +3312,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szVersion = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3320,7 +3320,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szReleaseDate = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3328,7 +3328,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szAuthorEMail = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3336,7 +3336,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szWebSite = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3344,7 +3344,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szBlurb = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3352,7 +3352,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szDescription = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3360,7 +3360,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szRules = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    txt = nullptr;
@@ -3368,7 +3368,7 @@ HRESULT PinTable::LoadInfo(IStorage* pstg, HCRYPTHASH hcrypthash, int version)
    if (txt != nullptr)
    {
        m_szDateSaved = txt;
-       delete(txt);
+       delete[] txt;
    }
 
    char *buffer = nullptr;
@@ -6044,12 +6044,13 @@ void PinTable::ImportBackdropPOV(const string& filename)
 #ifdef __STANDALONE__
         PLOGI.printf("szFileName=%s", szFileName[0].c_str());
 #endif
-        std::stringstream buffer;
-        std::ifstream myFile(szFileName[0]);
-        buffer << myFile.rdbuf();
-        myFile.close();
+        std::string buffer;
+        {
+           std::ifstream myFile(szFileName[0]);
+           buffer = { std::istreambuf_iterator<char>(myFile), {} };
+        }
 
-        xmlDoc.parse<0>((char*)buffer.str().c_str());
+        xmlDoc.parse<0>((char*)buffer.c_str());
 
         xml_node<> *root = xmlDoc.first_node("POV");
         if(!root)
