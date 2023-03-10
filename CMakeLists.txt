@@ -13,6 +13,7 @@ project(vpinball VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REV}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_SKIP_RPATH TRUE)
+set(ADDRESS_SANITIZER off CACHE BOOL "Turn on Address Sanitizer")
 
 add_library(glad
    inc/glad/src/gles2.c
@@ -399,6 +400,11 @@ set_target_properties(vpinball PROPERTIES
    RUNTIME_OUTPUT_NAME "VPinballX_GL"
    LINK_FLAGS "-Wl,--copy-dt-needed-entries -Wl,-rpath,$ORIGIN"
 )
+
+if(ADDRESS_SANITIZER)
+    target_compile_options(vpinball PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+    target_link_options(vpinball PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+endif()
 
 add_custom_command(TARGET vpinball POST_BUILD
    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:vpinball>/user"
