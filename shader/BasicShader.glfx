@@ -229,6 +229,30 @@ void main()
 #endif
 }
 
+
+////vs_main_lowcost
+
+layout(location=0) in vec3 vPosition;
+layout(location=1) in vec2 tc;
+
+out vec2 tex01;
+
+void main()
+{
+   float4 vPosition4 = float4(vPosition,1.0);
+   gl_Position = vPosition4;
+   tex01 = tc;
+
+   if (disableVertexShader)
+   {
+   }
+   else
+   {
+      gl_Position = matWorldViewProj[0]*gl_Position;
+   }
+}
+
+
 ////vs_notex_main
 
 layout(location=0) in vec3 vPosition;
@@ -538,6 +562,14 @@ void main() {
    color *= staticColor_Alpha;
 }
 
+
+////ps_main_notex_lowcost
+
+void main() {
+   color = cBase_Alpha;
+}
+
+
 ////ps_main_texture
 
 in vec2 tex01;
@@ -603,6 +635,15 @@ void main() {
    }
 
    color *= staticColor_Alpha;
+}
+
+
+////ps_main_texture_lowcost
+
+in vec2 tex01;
+
+void main() {
+   color = texture(tex_base_color, tex01);
 }
 
 
@@ -746,6 +787,18 @@ void main() {
 #endif
 }
 
+////vs_kicker_lowcost
+
+in vec3 vPosition;
+
+void main() {
+   gl_Position = float4(vPosition,1.0);
+   float4 P2 = gl_Position;
+   P2.z -= 30.0;
+   gl_Position.xyw = (matWorldViewProj[0]*gl_Position).xyw;
+   gl_Position.z = (matWorldViewProj[0]*P2).z;
+}
+
 //------------------------------------
 // Techniques
 //
@@ -756,7 +809,9 @@ void main() {
 ////TECHNIQUES
 
 basic_without_texture:P0:vs_notex_main():gs_notex_main():ps_main_notex()
+basic_without_texture_lowcost:P0:vs_depth_only_main_without_texture()::ps_main_notex_lowcost()
 basic_with_texture:P0:vs_main():gs_main():ps_main_texture()
+basic_with_texture_lowcost:P0:vs_main_lowcost()::ps_main_texture_lowcost()
 basic_refl_only_without_texture:P0:vs_notex_main():gs_notex_main():ps_main_reflection_only_without_texture()
 basic_refl_only_with_texture:P0:vs_main():gs_main():ps_main_reflection_only_with_texture()
 
@@ -775,5 +830,6 @@ bg_decal_with_texture:P0:vs_main():gs_main():ps_main_bg_decal_texture()
 //
 
 kickerBoolean:P0:vs_kicker():gs_kicker_main():ps_main_notex()
+kickerBoolean_lowcost:P0:vs_kicker_lowcost()::ps_main_notex_lowcost()
 
 #include "ClassicLightShader.glfx"

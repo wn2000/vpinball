@@ -19,14 +19,6 @@ layout(std140) uniform matrixBlock {
 
 ////VERTEX
 layout(location=0) in vec3 vPosition;
-layout(location=1) in vec2 tc;
-
-#ifndef SHADER_STANDALONE
-out vec3 tablePos_gs;
-#else
-out vec3 tablePos;
-#endif
-
 
 ////GEOMETRY
 #extension GL_ARB_viewport_array : enable
@@ -52,11 +44,18 @@ uniform vec4 lightColor2_falloff_power;
 uniform vec4 lightCenter_maxRange;
 uniform float blend_modulate_vs_add;
 
-in vec3 tablePos;
 out vec4 color;
 
 
 ////vs_lightbulb_main
+layout(location=1) in vec2 tc;
+
+#ifndef SHADER_STANDALONE
+out vec3 tablePos_gs;
+#else
+out vec3 tablePos;
+#endif
+
 void main()
 {
 #ifndef SHADER_STANDALONE
@@ -81,6 +80,20 @@ void main()
       gl_Position.z = max(gl_Position.z, 0.00001); // clamp lights to near clip plane to avoid them being partially clipped
    }
 #endif
+}
+
+
+////vs_lightbulb_main_lowcost
+uniform vec4 lightCenter_maxRange;
+out float lightDist;
+
+void main()
+{
+   gl_Position = vec4(vPosition, 1.0);
+   const float3 light_dir = vPosition - lightCenter_maxRange.xyz;
+   lightDist = length(light_dir);
+   gl_Position = matWorldViewProj[0]*gl_Position;
+   gl_Position.z = max(gl_Position.z, 0.00001); // clamp lights to near clip plane to avoid them being partially clipped
 }
 
 
@@ -110,6 +123,8 @@ void main()
 
 
 ////PS_BulbLight
+in vec3 tablePos;
+
 void main()
 {
    const float3 light_dir = tablePos - lightCenter_maxRange.xyz;
@@ -122,8 +137,20 @@ void main()
 }
 
 
+////PS_BulbLight_lowcost
+in float lightDist;
+
+void main()
+{
+   color = lightColor_intensity / lightDist;
+}
+
+
 ////PS_BulbLight_with_ball_shadows
 #include "BallShadows.fxh"
+
+in vec3 tablePos;
+
 void main()
 {
    const float3 light_dir = tablePos - lightCenter_maxRange.xyz;
@@ -140,4 +167,5 @@ void main()
 ////TECHNIQUES
 
 bulb_light:P0:vs_lightbulb_main():gs_lightbulb_main():PS_BulbLight()
+bulb_light_lowcost:P0:vs_lightbulb_main_lowcost()::PS_BulbLight_lowcost()
 bulb_light_with_ball_shadows:P0:vs_lightbulb_main():gs_lightbulb_main():PS_BulbLight_with_ball_shadows()

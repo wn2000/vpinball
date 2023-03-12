@@ -104,6 +104,20 @@ void main()
 #endif
 }
 
+////vs_light_main_lowcost
+
+layout(location=0) in vec3 vPosition;
+layout(location=1) in vec2 tc;
+
+out vec2 tex0;
+
+void main()
+{
+    gl_Position = float4(vPosition, 1.0);
+    tex0 = tc;
+    gl_Position = matWorldViewProj[0]*gl_Position;
+}
+
 ////gs_light_main
 
 in vec2 tex0_gs[]; 
@@ -178,6 +192,15 @@ void main()
     }
 }
 
+////PS_LightWithTexel_lowcost
+
+in vec2 tex0;
+
+void main()
+{
+    color = texNoLod(tex_light_color, tex0);
+}
+
 ////PS_LightWithoutTexel
 
 in vec2 tex0;
@@ -214,10 +237,20 @@ void main()
     color += result;
 }
 
+////PS_LightWithoutTexel_lowcost
+
+void main()
+{
+    color.xyz = lightColor_intensity.xyz;
+    color.a = cBase_Alpha.a;
+}
+
 ////TECHNIQUES
 
 light_with_texture:P0:vs_light_main():gs_light_main():PS_LightWithTexel()
+light_with_texture_lowcost:P0:vs_light_main_lowcost()::PS_LightWithTexel_lowcost()
 light_without_texture:P0:vs_light_main():gs_light_main():PS_LightWithoutTexel()
+light_without_texture_lowcost:P0:vs_light_main_lowcost():gs_light_main():PS_LightWithoutTexel_lowcost()
 
 //light_with_texture_isMetal:P0:vs_light_main():PS_LightWithTexel(true)
 //light_with_texture_isNotMetal:P0:vs_light_main():PS_LightWithTexel(false)

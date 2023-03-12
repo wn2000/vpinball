@@ -697,7 +697,7 @@ void Rubber::RenderStatic()
       if (g_pplayer->IsRenderPass(Player::REFLECTION_PASS) && !m_d.m_reflectionEnabled)
          return;
 
-      RenderObject();
+      RenderObject(false);
    }
 }
 
@@ -1228,7 +1228,7 @@ STDMETHODIMP Rubber::put_OverwritePhysics(VARIANT_BOOL newVal)
 }
 
 
-void Rubber::RenderObject()
+void Rubber::RenderObject(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -1258,14 +1258,16 @@ void Rubber::RenderObject()
    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
    if (pin)
    {
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+      pd3dDevice->basicShader->SetTechniqueMetal(
+         lowcost ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_with_texture, mat);
       pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, pin);
       pd3dDevice->basicShader->SetAlphaTestValue(pin->m_alphaTestValue * (float)(1.0 / 255.0));
       pd3dDevice->basicShader->SetMaterial(mat, pin->m_pdsBuffer->has_alpha());
    }
    else
    {
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+      pd3dDevice->basicShader->SetTechniqueMetal(
+         lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
       pd3dDevice->basicShader->SetMaterial(mat, false);
    }
 
@@ -1279,14 +1281,14 @@ void Rubber::RenderObject()
 // Always called each frame to render over everything else (along with primitives)
 // Same code as RenderStatic (with the exception of the alpha tests).
 // Also has less drawing calls by bundling seperate calls.
-void Rubber::RenderDynamic()
+void Rubber::RenderDynamic(bool lowcost)
 {
    if (!m_d.m_staticRendering)
    {
       if (g_pplayer->IsRenderPass(Player::REFLECTION_PASS) && !m_d.m_reflectionEnabled)
          return;
 
-      RenderObject();
+      RenderObject(lowcost);
    }
 }
 

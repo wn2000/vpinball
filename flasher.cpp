@@ -1248,7 +1248,7 @@ void Flasher::setInPlayState(const bool newVal)
    m_inPlayState = newVal;
 }
 
-void Flasher::RenderDynamic()
+void Flasher::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -1326,7 +1326,8 @@ void Flasher::RenderDynamic()
          g_pplayer->m_pin3d.EnableAlphaTestReference(0x80);*/
 
        //const float width = g_pplayer->m_pin3d.m_useAA ? 2.0f*(float)m_width : (float)m_width; //!! AA ?? -> should just work
-       pd3dDevice->DMDShader->SetTechnique(SHADER_TECHNIQUE_basic_DMD_world); //!! DMD_UPSCALE ?? -> should just work
+       pd3dDevice->DMDShader->SetTechnique(
+         lowcost ? SHADER_TECHNIQUE_basic_DMD_world_lowcost : SHADER_TECHNIQUE_basic_DMD_world); //!! DMD_UPSCALE ?? -> should just work
 
        pd3dDevice->DMDShader->SetVector(SHADER_vColor_Intensity, &color);
 
@@ -1369,7 +1370,8 @@ void Flasher::RenderDynamic()
        pd3dDevice->flasherShader->SetFlasherColorAlpha(color);
 
        vec4 flasherData(-1.f, -1.f, (float)m_d.m_filter, m_d.m_addBlend ? 1.f : 0.f);
-       pd3dDevice->flasherShader->SetTechnique(SHADER_TECHNIQUE_basic_noLight);
+       pd3dDevice->flasherShader->SetTechnique(
+         lowcost ? SHADER_TECHNIQUE_basic_noLight_lowcost : SHADER_TECHNIQUE_basic_noLight);
 
        float flasherMode;
        if ((pinA || m_isVideoCap) && !pinB)

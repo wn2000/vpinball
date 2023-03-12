@@ -354,7 +354,7 @@ void Spinner::UpdatePlate(Vertex3D_NoTex2 * const vertBuffer)
       m_plateMeshBuffer->m_vb->unlock();
 }
 
-void Spinner::RenderDynamic()
+void Spinner::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -379,14 +379,16 @@ void Spinner::RenderDynamic()
    Texture * const image = m_ptable->GetImage(m_d.m_szImage);
    if (image)
    {
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+      pd3dDevice->basicShader->SetTechniqueMetal(
+         lowcost ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_with_texture, mat);
       pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, image);
       pd3dDevice->basicShader->SetAlphaTestValue(image->m_alphaTestValue * (float)(1.0 / 255.0));
       pd3dDevice->basicShader->SetMaterial(mat, image->m_pdsBuffer->has_alpha());
    }
    else // No image by that name
    {
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+      pd3dDevice->basicShader->SetTechniqueMetal(
+         lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
       pd3dDevice->basicShader->SetMaterial(mat, false);
    }
 

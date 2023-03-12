@@ -1264,7 +1264,7 @@ void Ramp::RenderStatic()
       return;
 
    const Material *const mat = m_ptable->GetMaterial(m_d.m_szMaterial);
-   RenderRamp(mat);
+   RenderRamp(mat, false);
 }
 
 void Ramp::SetObjectPos()
@@ -2162,7 +2162,7 @@ void Ramp::ExportMesh(ObjLoader& loader)
    }
 }
 
-void Ramp::RenderRamp(const Material * const mat)
+void Ramp::RenderRamp(const Material * const mat, bool lowcost)
 {
    if (!mat)
       return;
@@ -2198,14 +2198,16 @@ void Ramp::RenderRamp(const Material * const mat)
           * since the texture coordinates always stay within [0,1] anyway. */
          SamplerAddressMode sam = m_d.m_imagealignment == ImageModeWrap ? SA_CLAMP : SA_REPEAT;
 
-         pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+         pd3dDevice->basicShader->SetTechniqueMetal(
+            lowcost ?  SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_with_texture, mat);
          pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, pin, SF_TRILINEAR, sam, sam);
          pd3dDevice->basicShader->SetAlphaTestValue(pin->m_alphaTestValue * (float)(1.0 / 255.0));
          pd3dDevice->basicShader->SetMaterial(mat, pin->m_pdsBuffer->has_alpha());
       }
       else
       {
-         pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+         pd3dDevice->basicShader->SetTechniqueMetal(
+            lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
          pd3dDevice->basicShader->SetMaterial(mat, false);
       }
 
@@ -2229,7 +2231,8 @@ void Ramp::RenderRamp(const Material * const mat)
             if (pin && !m_d.m_imageWalls)
             {
                pd3dDevice->basicShader->End();
-               pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+               pd3dDevice->basicShader->SetTechniqueMetal(
+                  lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
                pd3dDevice->basicShader->Begin();
             }
 
@@ -2253,7 +2256,7 @@ void Ramp::RenderRamp(const Material * const mat)
 // Always called each frame to render over everything else (along with primitives)
 // Same code as RenderStatic (with the exception of the alpha tests).
 // Also has less drawing calls by bundling seperate calls.
-void Ramp::RenderDynamic()
+void Ramp::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -2264,7 +2267,7 @@ void Ramp::RenderDynamic()
    if (g_pplayer->IsRenderPass(Player::REFLECTION_PASS) && !m_d.m_reflectionEnabled)
       return;
 
-   RenderRamp(mat);
+   RenderRamp(mat, lowcost);
 }
 
 //

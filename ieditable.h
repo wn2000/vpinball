@@ -163,7 +163,7 @@ public:
 	virtual void RenderSetup(); \
 	virtual void UpdateAnimation(const float diff_time_msec); \
 	virtual void RenderStatic(); \
-	virtual void RenderDynamic(); \
+	virtual void RenderDynamic(bool lowcost) override; \
 	STDMETHOD(GetDisplayString)(DISPID dispID, BSTR *pbstr) {return hrNotImplemented;} \
 	STDMETHOD(MapPropertyToPage)(DISPID dispID, CLSID *pclsid) {return hrNotImplemented;} \
 	STDMETHOD(GetPredefinedStrings)(DISPID dispID, CALPOLESTR *pcaStringsOut, CADWORD *pcaCookiesOut) {return GetPTable()->GetPredefinedStrings(dispID, pcaStringsOut, pcaCookiesOut, this);} \

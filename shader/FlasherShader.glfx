@@ -79,6 +79,15 @@ void main()
 #endif
 }
 
+////vs_simple_main_lowcost
+
+void main()
+{
+   gl_Position = vec4(vPosition, 1.0);
+   tex0 = tc;
+   gl_Position = (matWorldViewProj[0]*gl_Position);
+}
+
 ////gs_simple_main
 
 in vec2 tex0_gs[];
@@ -159,7 +168,15 @@ void main()
                      1.0/amount_blend_modulate_vs_add_flasherMode.y - 1.0);
 }
 
+////ps_main_noLight_lowcost
+
+void main()
+{
+   color = texture(tex_flasher_A, tex0);
+   color *= staticColor_Alpha;
+}
 
 ////TECHNIQUES
 
 basic_noLight:P0:vs_simple_main():gs_simple_main():ps_main_noLight()
+basic_noLight_lowcost:P0:vs_simple_main_lowcost()::ps_main_noLight_lowcost()

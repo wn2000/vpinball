@@ -99,7 +99,7 @@ public:
 private:
    void GetTextSize(int * const px, int * const py);
    void PreRenderText();
-   void RenderObject();
+   void RenderObject(bool lowcost);
 
    PinTable *m_ptable;
 

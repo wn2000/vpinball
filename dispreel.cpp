@@ -202,7 +202,7 @@ void DispReel::EndPlay()
    IEditable::EndPlay();
 }
 
-void DispReel::RenderDynamic()
+void DispReel::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 

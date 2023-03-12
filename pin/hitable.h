@@ -11,7 +11,7 @@ public:
    virtual void RenderSetup() = 0;
    virtual void UpdateAnimation(const float diff_time_msec) = 0;
    virtual void RenderStatic() = 0;
-   virtual void RenderDynamic() = 0;
+   virtual void RenderDynamic(bool lowcost) = 0;
    virtual void EndPlay() = 0;
 
    virtual ItemTypeEnum HitableGetItemType() const = 0;

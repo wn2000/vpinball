@@ -354,7 +354,7 @@ public:
 
    void SetViewVector(const Vertex3Ds &viewVec);
    void DrawStatics();
-   void DrawDynamics(bool onlyBalls);
+   void DrawDynamics(bool onlyBalls, bool lowcost = false);
 
    Ball *CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius = 25.0f, const float mass = 1.0f);
    void DestroyBall(Ball *pball);
@@ -387,9 +387,9 @@ public:
    float ParseLog(LARGE_INTEGER *pli1, LARGE_INTEGER *pli2);
 #endif
 
-   void DMDdraw(const float DMDposx, const float DMDposy, const float DMDwidth, const float DMDheight, const COLORREF DMDcolor, const float intensity);
-   void Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Texture* const tex, const float intensity, const bool backdrop=false);
-   void Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Sampler* const tex, const float intensity, const bool backdrop=false);
+   void DMDdraw(float DMDposx, const float DMDposy, const float DMDwidth, const float DMDheight, const COLORREF DMDcolor, const float intensity, bool lowcost);
+   void Spritedraw(float posx, float posy, float width, float height, COLORREF color, Texture* const tex, float intensity, bool backdrop = false, bool lowcost = false);
+   void Spritedraw(float posx, float posy, float width, float height, COLORREF color, Sampler* const tex, float intensity, bool backdrop = false, bool lowcost = false);
 
 #ifdef ENABLE_SDL
    SDL_Window  *m_sdl_playfieldHwnd;

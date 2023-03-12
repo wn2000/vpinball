@@ -145,8 +145,8 @@ private:
    void SetupHitObject(vector<HitObject*> &pvho, HitObject * const obj);
    void AddLine(vector<HitObject*> &pvho, const RenderVertex &pv1, const RenderVertex &pv2);
 
-   void RenderSlingshots();
-   void RenderWallsAtHeight(const bool drop);
+   void RenderSlingshots(bool lowcost);
+   void RenderWallsAtHeight(bool drop, bool lowcost);
    void PrepareWallsAtHeight();
    void PrepareSlingshots();
    void GenerateMesh(vector<Vertex3D_NoTex2> &topBuf, vector<Vertex3D_NoTex2> &sideBuf, vector<WORD> &topBottomIndices, vector<WORD> &sideIndices);

@@ -379,7 +379,7 @@ void Bumper::UpdateSkirt(const bool doCalculation)
    m_socketMeshBuffer->m_vb->unlock();
 }
 
-void Bumper::RenderDynamic()
+void Bumper::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -393,6 +393,10 @@ void Bumper::RenderDynamic()
    pd3dDevice->SetRenderStateDepthBias(0.0f);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, RenderDevice::RS_TRUE);
    pd3dDevice->SetRenderStateCulling(RenderDevice::CULL_CCW);
+
+   ShaderTechniques technique = lowcost ?
+                                SHADER_TECHNIQUE_basic_with_texture_lowcost :
+                                SHADER_TECHNIQUE_basic_with_texture;
 
    if (m_d.m_ringVisible)
    {
@@ -408,7 +412,7 @@ void Bumper::RenderDynamic()
          ringMaterial.m_type = Material::MaterialType::METAL;
       }
 
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, ringMaterial);
+      pd3dDevice->basicShader->SetTechniqueMetal(technique, ringMaterial);
       pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, &m_ringTexture);
       pd3dDevice->basicShader->SetMaterial(&ringMaterial, false);
       pd3dDevice->basicShader->SetAlphaTestValue(-1.0f);
@@ -423,7 +427,7 @@ void Bumper::RenderDynamic()
    {
       const Material * const mat = m_ptable->GetMaterial(m_d.m_szSkirtMaterial);
       pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, &m_skirtTexture);
-      pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+      pd3dDevice->basicShader->SetTechniqueMetal(technique, mat);
       pd3dDevice->SetRenderStateCulling(RenderDevice::CULL_NONE);
       RenderSocket(mat);
    }
@@ -433,7 +437,7 @@ void Bumper::RenderDynamic()
       const Material * const mat = m_ptable->GetMaterial(m_d.m_szBaseMaterial);
       if (mat->m_bOpacityActive)
       {
-         pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+         pd3dDevice->basicShader->SetTechniqueMetal(technique, mat);
          pd3dDevice->SetRenderStateCulling(RenderDevice::CULL_NONE);
          RenderBase(mat);
       }
@@ -444,7 +448,7 @@ void Bumper::RenderDynamic()
       const Material * const mat = m_ptable->GetMaterial(m_d.m_szCapMaterial);
       if (mat->m_bOpacityActive)
       {
-         pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+         pd3dDevice->basicShader->SetTechniqueMetal(technique, mat);
          pd3dDevice->SetRenderStateCulling(RenderDevice::CULL_NONE);
          RenderCap(mat);
       }

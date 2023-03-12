@@ -537,7 +537,7 @@ void Kicker::SetDefaultPhysics(const bool fromMouseClick)
    m_d.m_scatter = fromMouseClick ? LoadValueFloatWithDefault(regKey[RegName::DefaultPropsKicker], "Scatter"s, 0.f) : 0.f;
 }
 
-void Kicker::RenderDynamic()
+void Kicker::RenderDynamic(bool lowcost)
 {
    if (g_pplayer->IsRenderPass(Player::REFLECTION_PASS))
       return;

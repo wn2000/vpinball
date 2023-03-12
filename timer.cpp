@@ -124,7 +124,7 @@ void Timer::RenderStatic()
 {
 }
 
-void Timer::RenderDynamic()
+void Timer::RenderDynamic(bool)
 {
 }
 

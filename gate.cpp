@@ -388,7 +388,7 @@ void Gate::EndPlay()
    m_vertexbuffer_angle = FLT_MAX;
 }
 
-void Gate::RenderObject()
+void Gate::RenderObject(bool lowcost)
 {
    if (m_phitgate->m_gateMover.m_angle != m_vertexbuffer_angle)
    {
@@ -438,7 +438,8 @@ void Gate::RenderObject()
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, RenderDevice::RS_TRUE);
    pd3dDevice->SetRenderStateCulling(RenderDevice::CULL_CCW);
 
-   pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+   pd3dDevice->basicShader->SetTechniqueMetal(
+      lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
    pd3dDevice->basicShader->Begin();
 
    // render bracket
@@ -452,7 +453,7 @@ void Gate::RenderObject()
    pd3dDevice->CopyRenderStates(false, initial_state);
 }
 
-void Gate::RenderDynamic()
+void Gate::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -462,7 +463,7 @@ void Gate::RenderDynamic()
    if (g_pplayer->IsRenderPass(Player::REFLECTION_PASS) && !m_d.m_reflectionEnabled)
       return;
 
-   RenderObject();
+   RenderObject(lowcost);
 }
 
 void Gate::ExportMesh(ObjLoader& loader)

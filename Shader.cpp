@@ -46,6 +46,7 @@ const string Shader::shaderTechniqueNames[SHADER_TECHNIQUE_COUNT]
    SHADER_TECHNIQUE(RenderBallTrail),
    // OpenGL only has the first variant. DX9 needs all of them due to shader compiler limitation
    SHADER_TECHNIQUE(basic_with_texture),
+   SHADER_TECHNIQUE(basic_with_texture_lowcost),
    SHADER_TECHNIQUE(basic_with_texture_isMetal),
    SHADER_TECHNIQUE(basic_with_texture_normal),
    SHADER_TECHNIQUE(basic_with_texture_normal_isMetal),
@@ -63,6 +64,7 @@ const string Shader::shaderTechniqueNames[SHADER_TECHNIQUE_COUNT]
    SHADER_TECHNIQUE(basic_with_texture_refr_refl_normal_isMetal),
    // OpenGL only has the first variant. DX9 needs all of them due to shader compiler limitation
    SHADER_TECHNIQUE(basic_without_texture),
+   SHADER_TECHNIQUE(basic_without_texture_lowcost),
    SHADER_TECHNIQUE(basic_without_texture_isMetal),
    SHADER_TECHNIQUE(basic_without_texture_refl),
    SHADER_TECHNIQUE(basic_without_texture_refl_isMetal),
@@ -78,18 +80,25 @@ const string Shader::shaderTechniqueNames[SHADER_TECHNIQUE_COUNT]
    SHADER_TECHNIQUE(bg_decal_without_texture),
    SHADER_TECHNIQUE(bg_decal_with_texture),
    SHADER_TECHNIQUE(kickerBoolean),
+   SHADER_TECHNIQUE(kickerBoolean_lowcost),
    SHADER_TECHNIQUE(kickerBoolean_isMetal),
    SHADER_TECHNIQUE(light_with_texture),
+   SHADER_TECHNIQUE(light_with_texture_lowcost),
    SHADER_TECHNIQUE(light_with_texture_isMetal),
    SHADER_TECHNIQUE(light_without_texture),
+   SHADER_TECHNIQUE(light_without_texture_lowcost),
    SHADER_TECHNIQUE(light_without_texture_isMetal),
    SHADER_TECHNIQUE(basic_DMD),
+   SHADER_TECHNIQUE(basic_DMD_lowcost),
    SHADER_TECHNIQUE(basic_DMD_ext),
    SHADER_TECHNIQUE(basic_DMD_world),
+   SHADER_TECHNIQUE(basic_DMD_world_lowcost),
    SHADER_TECHNIQUE(basic_DMD_world_ext),
    SHADER_TECHNIQUE(basic_noDMD),
+   SHADER_TECHNIQUE(basic_noDMD_lowcost),
    SHADER_TECHNIQUE(basic_noDMD_world),
    SHADER_TECHNIQUE(basic_noDMD_notex),
+   SHADER_TECHNIQUE(basic_noDMD_notex_lowcost),
    SHADER_TECHNIQUE(AO),
    SHADER_TECHNIQUE(NFAA),
    SHADER_TECHNIQUE(DLAA_edge),
@@ -132,7 +141,9 @@ const string Shader::shaderTechniqueNames[SHADER_TECHNIQUE_COUNT]
    SHADER_TECHNIQUE(BilateralSharp_CAS),
    SHADER_TECHNIQUE(SSReflection),
    SHADER_TECHNIQUE(basic_noLight),
+   SHADER_TECHNIQUE(basic_noLight_lowcost),
    SHADER_TECHNIQUE(bulb_light),
+   SHADER_TECHNIQUE(bulb_light_lowcost),
    SHADER_TECHNIQUE(bulb_light_with_ball_shadows),
 #ifndef __OPENGLES__
    SHADER_TECHNIQUE(SMAA_ColorEdgeDetection),
@@ -634,7 +645,7 @@ void Shader::SetTechnique(ShaderTechniques technique)
    if (m_techniques[technique] == nullptr)
    {
       m_technique = SHADER_TECHNIQUE_INVALID;
-      ShowError("Fatal Error: Could not find shader technique " + shaderTechniqueNames[technique]);
+      PLOGE.printf("Could not find shader technique: %s (%d)", shaderTechniqueNames[technique].c_str(), technique);
       exit(-1);
    }
 #endif

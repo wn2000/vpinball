@@ -1180,7 +1180,7 @@ void Primitive::ExportMesh(ObjLoader& loader)
    }
 }
 
-void Primitive::RenderObject()
+void Primitive::RenderObject(bool lowcost)
 {
    RenderDevice *const pd3dDevice = g_pplayer->m_pin3d.m_pd3dPrimaryDevice;
    RenderDevice::RenderStateCache initial_state;
@@ -1327,7 +1327,10 @@ void Primitive::RenderObject()
       is_reflection_only_pass = m_d.m_staticRendering && !g_pplayer->IsRenderPass(Player::STATIC_PREPASS) && !g_pplayer->m_dynamicMode;
       if (!is_reflection_only_pass && mat->m_bOpacityActive && (mat->m_fOpacity < 1.0f || (pin && pin->has_alpha())))
       { // Primitive uses alpha transparency => render in 2 passes, one for the texture with alpha blending, one for the reflections which can happen above a transparent part (like for a glass or insert plastic)
-         pd3dDevice->basicShader->SetTechniqueMetal(pin ? SHADER_TECHNIQUE_basic_with_texture : SHADER_TECHNIQUE_basic_without_texture, mat, nMap, false, false);
+         pd3dDevice->basicShader->SetTechniqueMetal(
+            lowcost ? 
+            (pin ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture_lowcost) :
+            (pin ? SHADER_TECHNIQUE_basic_with_texture : SHADER_TECHNIQUE_basic_without_texture), mat, nMap, false, false);
          pd3dDevice->basicShader->Begin();
          pd3dDevice->DrawMesh(m_meshBuffer, RenderDevice::TRIANGLELIST, 0, m_d.m_groupdRendering ? m_numGroupIndices : (DWORD)m_mesh.NumIndices());
          pd3dDevice->basicShader->End();
@@ -1343,7 +1346,10 @@ void Primitive::RenderObject()
    }
    else
    {
-      pd3dDevice->basicShader->SetTechniqueMetal(pin ? SHADER_TECHNIQUE_basic_with_texture : SHADER_TECHNIQUE_basic_without_texture, mat, nMap, reflections, refractions);
+      pd3dDevice->basicShader->SetTechniqueMetal(
+         lowcost ?
+         (pin ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture_lowcost) :
+         (pin ? SHADER_TECHNIQUE_basic_with_texture : SHADER_TECHNIQUE_basic_without_texture), mat, nMap, reflections, refractions);
    }
 
    // draw the mesh
@@ -1369,7 +1375,7 @@ void Primitive::RenderObject()
 }
 
 // Always called each frame to render over everything else (along with alpha ramps)
-void Primitive::RenderDynamic()
+void Primitive::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -1400,7 +1406,7 @@ void Primitive::RenderDynamic()
        }
    }
 
-   RenderObject();
+   RenderObject(lowcost);
 }
 
 void Primitive::RenderSetup()
@@ -1468,7 +1474,7 @@ void Primitive::RenderStatic()
            return;
    }
 
-   RenderObject();
+   RenderObject(false);
 }
 
 //////////////////////////////

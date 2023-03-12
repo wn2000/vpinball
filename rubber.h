@@ -145,7 +145,7 @@ private:
 
    void GenerateVertexBuffer();
 
-   void RenderObject();
+   void RenderObject(bool lowcost);
    void UpdateRubber(const bool updateVB, const float height);
    void GenerateMesh(const int _accuracy = -1, const bool createHitShape = false);
    void DrawRubberMesh(Sur * const psur);

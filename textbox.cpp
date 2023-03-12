@@ -270,7 +270,7 @@ void Textbox::EndPlay()
    IEditable::EndPlay();
 }
 
-void Textbox::RenderDynamic()
+void Textbox::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -305,12 +305,12 @@ void Textbox::RenderDynamic()
    if (dmd)
    {
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, RenderDevice::RS_FALSE);
-      g_pplayer->DMDdraw(x, y, width, height, m_d.m_fontcolor, m_d.m_intensity_scale); //!! replace??!
+      g_pplayer->DMDdraw(x, y, width, height, m_d.m_fontcolor, m_d.m_intensity_scale, lowcost); //!! replace??!
    }
    else if (m_texture)
    {
       pd3dDevice->DMDShader->SetFloat(SHADER_alphaTestValue, (float)(128.0 / 255.0));
-      g_pplayer->Spritedraw(x, y, width, height, 0xFFFFFFFF, pd3dDevice->m_texMan.LoadTexture(m_texture, SF_TRILINEAR, SA_REPEAT, SA_REPEAT, false), m_d.m_intensity_scale);
+      g_pplayer->Spritedraw(x, y, width, height, 0xFFFFFFFF, pd3dDevice->m_texMan.LoadTexture(m_texture, SF_TRILINEAR, SA_REPEAT, SA_REPEAT, false), m_d.m_intensity_scale, false, lowcost);
       pd3dDevice->DMDShader->SetFloat(SHADER_alphaTestValue, 1.0f);
    }
 

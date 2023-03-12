@@ -428,12 +428,12 @@ void Decal::EndPlay()
    IEditable::EndPlay();
 }
 
-void Decal::RenderDynamic()
+void Decal::RenderDynamic(bool lowcost)
 {
    const Material * const mat = m_ptable->GetMaterial(m_d.m_szMaterial);
    if (!m_backglass //!! should just check if material has opacity enabled, but this is crucial for HV setup performance like-is
       && mat->m_bOpacityActive)
-      RenderObject();
+      RenderObject(lowcost);
 }
 
 static constexpr WORD rgi0123[4] = { 0, 1, 2, 3 };
@@ -539,7 +539,7 @@ float Decal::GetDepth(const Vertex3Ds& viewDir) const
    return !m_backglass ? (viewDir.x * m_d.m_vCenter.x + viewDir.y * m_d.m_vCenter.y + viewDir.z*height) : 0.f;
 }
 
-void Decal::RenderObject()
+void Decal::RenderObject(bool lowcost)
 {
    if (m_backglass && !GetPTable()->GetDecalsEnabled())
       return;
@@ -563,7 +563,8 @@ void Decal::RenderObject()
    if (m_d.m_decaltype != DecalImage)
    {
       if (!m_backglass)
-         pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+         pd3dDevice->basicShader->SetTechniqueMetal(
+            lowcost ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_with_texture, mat);
       else
          pd3dDevice->basicShader->SetTechnique(SHADER_TECHNIQUE_bg_decal_with_texture);
       pd3dDevice->basicShader->SetTexture(SHADER_tex_base_color, m_textImg);
@@ -575,7 +576,8 @@ void Decal::RenderObject()
       if (pin)
       {
          if (!m_backglass)
-            pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_with_texture, mat);
+            pd3dDevice->basicShader->SetTechniqueMetal(
+               lowcost ? SHADER_TECHNIQUE_basic_with_texture_lowcost : SHADER_TECHNIQUE_basic_with_texture, mat);
          else
             pd3dDevice->basicShader->SetTechnique(SHADER_TECHNIQUE_bg_decal_with_texture);
          // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
@@ -585,7 +587,8 @@ void Decal::RenderObject()
       else
       {
          if (!m_backglass)
-            pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+            pd3dDevice->basicShader->SetTechniqueMetal(
+               lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
          else
             pd3dDevice->basicShader->SetTechnique(SHADER_TECHNIQUE_bg_decal_without_texture);
       }
@@ -626,7 +629,7 @@ void Decal::RenderStatic()
 
    if (m_backglass //!! should just check if material has no opacity enabled, but this is crucial for HV setup performance like-is
       || !mat->m_bOpacityActive)
-      RenderObject();
+      RenderObject(false);
 }
 
 void Decal::SetObjectPos()

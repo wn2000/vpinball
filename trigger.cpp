@@ -571,7 +571,7 @@ void Trigger::UpdateAnimation(const float diff_time_msec)
 // end of license:GPLv3+, back to 'old MAME'-like
 //
 
-void Trigger::RenderDynamic()
+void Trigger::RenderDynamic(bool lowcost)
 {
    if (!m_d.m_visible || m_d.m_shape == TriggerNone)
       return;
@@ -603,7 +603,8 @@ void Trigger::RenderDynamic()
    }
 
    const Material *const mat = m_ptable->GetMaterial(m_d.m_szMaterial);
-   pd3dDevice->basicShader->SetTechniqueMetal(SHADER_TECHNIQUE_basic_without_texture, mat);
+   pd3dDevice->basicShader->SetTechniqueMetal(
+      lowcost ? SHADER_TECHNIQUE_basic_without_texture_lowcost : SHADER_TECHNIQUE_basic_without_texture, mat);
    pd3dDevice->basicShader->SetMaterial(mat, false);
 
    pd3dDevice->SetRenderStateDepthBias(0.0f);

@@ -366,7 +366,7 @@ void Light::RenderBulbMesh()
    pd3dDevice->CopyRenderStates(false, initial_state);
 }
 
-void Light::RenderDynamic()
+void Light::RenderDynamic(bool lowcost)
 {
    TRACE_FUNCTION();
 
@@ -438,7 +438,7 @@ void Light::RenderDynamic()
    {
       pd3dDevice->lightShader->SetLightData(center_range);
       pd3dDevice->lightShader->SetLightColor2FalloffPower(lightColor2_falloff_power);
-      pd3dDevice->lightShader->SetTechnique(SHADER_TECHNIQUE_bulb_light);
+      pd3dDevice->lightShader->SetTechnique(lowcost ? SHADER_TECHNIQUE_bulb_light_lowcost : SHADER_TECHNIQUE_bulb_light);
 
       const Pin3D *const ppin3d = &g_pplayer->m_pin3d;
       ppin3d->EnableAlphaBlend(false, false, false);
@@ -467,7 +467,8 @@ void Light::RenderDynamic()
 
       if (offTexel != nullptr)
       {
-         pd3dDevice->classicLightShader->SetTechniqueMetal(SHADER_TECHNIQUE_light_with_texture, m_surfaceMaterial);
+         pd3dDevice->classicLightShader->SetTechniqueMetal(
+            lowcost ? SHADER_TECHNIQUE_light_with_texture_lowcost : SHADER_TECHNIQUE_light_with_texture, m_surfaceMaterial);
          pd3dDevice->classicLightShader->SetTexture(SHADER_tex_light_color, offTexel, SF_TRILINEAR, SA_CLAMP, SA_CLAMP);
          // Was: if (m_ptable->m_reflectElementsOnPlayfield && g_pplayer->m_pf_refl && !m_backglass)*/
          // TOTAN and Flintstones inserts break if alpha blending is disabled here.
@@ -480,7 +481,8 @@ void Light::RenderDynamic()
          }
       }
       else
-         pd3dDevice->classicLightShader->SetTechniqueMetal(SHADER_TECHNIQUE_light_without_texture, m_surfaceMaterial);
+         pd3dDevice->classicLightShader->SetTechniqueMetal(
+            lowcost ? SHADER_TECHNIQUE_light_without_texture_lowcost : SHADER_TECHNIQUE_light_without_texture, m_surfaceMaterial);
 
       lightColor_intensity.w = m_d.m_currentIntensity;
       pd3dDevice->classicLightShader->SetLightColorIntensity(lightColor_intensity);
@@ -498,7 +500,9 @@ void Light::RenderDynamic()
 
       pd3dDevice->lightShader->SetBool(SHADER_disableVertexShader, m_backglass);
       pd3dDevice->lightShader->SetFloat(SHADER_blend_modulate_vs_add, !g_pplayer->IsRenderPass(Player::LIGHT_BUFFER) ? min(max(m_d.m_modulate_vs_add, 0.00001f), 0.9999f) : 0.00001f); // avoid 0, as it disables the blend and avoid 1 as it looks not good with day->night changes // in the separate bulb light render stage only enable additive
-      pd3dDevice->lightShader->SetTechnique(m_d.m_shadows == ShadowMode::RAYTRACED_BALL_SHADOWS ? SHADER_TECHNIQUE_bulb_light_with_ball_shadows : SHADER_TECHNIQUE_bulb_light);
+      pd3dDevice->lightShader->SetTechnique(
+         lowcost ? SHADER_TECHNIQUE_bulb_light_lowcost :
+         m_d.m_shadows == ShadowMode::RAYTRACED_BALL_SHADOWS ? SHADER_TECHNIQUE_bulb_light_with_ball_shadows : SHADER_TECHNIQUE_bulb_light);
 
       lightColor_intensity.w = m_d.m_currentIntensity;
       if (g_pplayer->IsRenderPass(Player::LIGHT_BUFFER))

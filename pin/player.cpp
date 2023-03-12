@@ -3274,7 +3274,7 @@ void Player::UpdatePhysics(U64 initial_time_usec)
    m_phys_period = (U32)((usec() - delta_frame) - initial_time_usec);
 }
 
-void Player::DMDdraw(const float DMDposx, const float DMDposy, const float DMDwidth, const float DMDheight, const COLORREF DMDcolor, const float intensity)
+void Player::DMDdraw(const float DMDposx, const float DMDposy, const float DMDwidth, const float DMDheight, const COLORREF DMDcolor, const float intensity, bool lowcost)
 {
    if (m_texdmd)
    {
@@ -3287,7 +3287,10 @@ void Player::DMDdraw(const float DMDposx, const float DMDposy, const float DMDwi
 
 #ifdef ENABLE_SDL
       // If DMD capture is enabled check if external DMD exists and update m_texdmd with captured data (for capturing UltraDMD+P-ROC DMD)
-      m_pin3d.m_pd3dPrimaryDevice->DMDShader->SetTechnique(m_capExtDMD ? SHADER_TECHNIQUE_basic_DMD_ext : SHADER_TECHNIQUE_basic_DMD); //!! DMD_UPSCALE ?? -> should just work
+      m_pin3d.m_pd3dPrimaryDevice->DMDShader->SetTechnique(
+         lowcost ?
+         (m_capExtDMD ? SHADER_TECHNIQUE_basic_DMD_ext : SHADER_TECHNIQUE_basic_DMD_lowcost) :
+         (m_capExtDMD ? SHADER_TECHNIQUE_basic_DMD_ext : SHADER_TECHNIQUE_basic_DMD)); //!! DMD_UPSCALE ?? -> should just work
 
       if (m_pin3d.m_backGlass)
       {
@@ -3334,7 +3337,7 @@ void Player::DMDdraw(const float DMDposx, const float DMDposy, const float DMDwi
    }
 }
 
-void Player::Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Texture * const tex, const float intensity, const bool backdrop)
+void Player::Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Texture * const tex, const float intensity, const bool backdrop, const bool lowcost)
 {
    RenderDevice * const pd3dDevice = backdrop ? m_pin3d.m_pd3dSecondaryDevice : m_pin3d.m_pd3dPrimaryDevice;
 
@@ -3352,7 +3355,10 @@ void Player::Spritedraw(const float posx, const float posy, const float width, c
       Verts[i * 5 + 1] = 1.0f - (Verts[i * 5 + 1] * height + posy)*2.0f;
    }
 
-   pd3dDevice->DMDShader->SetTechnique(tex ? SHADER_TECHNIQUE_basic_noDMD : SHADER_TECHNIQUE_basic_noDMD_notex);
+   pd3dDevice->DMDShader->SetTechnique(
+      lowcost ?
+      (tex ? SHADER_TECHNIQUE_basic_noDMD_lowcost : SHADER_TECHNIQUE_basic_noDMD_notex_lowcost) :
+      (tex ? SHADER_TECHNIQUE_basic_noDMD : SHADER_TECHNIQUE_basic_noDMD_notex));
 
    const vec4 c = convertColor(color, intensity);
    pd3dDevice->DMDShader->SetVector(SHADER_vColor_Intensity, &c);
@@ -3365,7 +3371,7 @@ void Player::Spritedraw(const float posx, const float posy, const float width, c
    pd3dDevice->DMDShader->End();
 }
 
-void Player::Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Sampler * const tex, const float intensity, const bool backdrop)
+void Player::Spritedraw(const float posx, const float posy, const float width, const float height, const COLORREF color, Sampler * const tex, const float intensity, const bool backdrop, const bool lowcost)
 {
    RenderDevice * const pd3dDevice = backdrop ? m_pin3d.m_pd3dSecondaryDevice : m_pin3d.m_pd3dPrimaryDevice;
 
@@ -3383,7 +3389,10 @@ void Player::Spritedraw(const float posx, const float posy, const float width, c
       Verts[i * 5 + 1] = 1.0f - (Verts[i * 5 + 1] * height + posy)*2.0f;
    }
 
-   pd3dDevice->DMDShader->SetTechnique(tex ? SHADER_TECHNIQUE_basic_noDMD : SHADER_TECHNIQUE_basic_noDMD_notex);
+   pd3dDevice->DMDShader->SetTechnique(
+      lowcost ?
+      (tex ? SHADER_TECHNIQUE_basic_noDMD_lowcost : SHADER_TECHNIQUE_basic_noDMD_notex_lowcost) :
+      (tex ? SHADER_TECHNIQUE_basic_noDMD : SHADER_TECHNIQUE_basic_noDMD_notex));
 
    const vec4 c = convertColor(color, intensity);
    pd3dDevice->DMDShader->SetVector(SHADER_vColor_Intensity, &c);
@@ -3413,7 +3422,7 @@ void Player::DrawBulbLightBuffer()
    for (size_t i = 0; i < m_vHitTrans.size(); ++i)
       if (m_vHitTrans[i]->RenderToLightBuffer())
       {
-         m_vHitTrans[i]->RenderDynamic();
+         m_vHitTrans[i]->RenderDynamic(false);
          do_bloom = true;
       }
    m_render_mask &= ~LIGHT_BUFFER;
@@ -3487,7 +3496,7 @@ void Player::RenderDynamics()
    if (m_dynamicMode)
       DrawStatics();
 
-   DrawDynamics(false);
+   DrawDynamics(/*onlyballs=*/false, /*lowcost=*/true);
 
    m_pin3d.m_pd3dPrimaryDevice->basicShader->SetTextureNull(SHADER_tex_base_transmission); // need to reset the bulb light texture, as its used as render target for bloom again
 
@@ -5603,7 +5612,7 @@ void Player::DrawStatics()
       }
 }
 
-void Player::DrawDynamics(bool onlyBalls)
+void Player::DrawDynamics(bool onlyBalls, bool lowcost)
 {
    #ifdef DEBUG
    // Check that RenderStatic / RenderDynamic restore render state to its initial value
@@ -5629,7 +5638,7 @@ void Player::DrawDynamics(bool onlyBalls)
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (!m_vHitNonTrans[i]->IsDMD())
          {
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
             #ifdef DEBUG
             m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
             assert(initial_state.state == live_state.state);
@@ -5642,7 +5651,7 @@ void Player::DrawDynamics(bool onlyBalls)
       // for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
       //    if (m_vHitNonTrans[i]->IsDMD())
       //    {
-      //       m_vHitNonTrans[i]->RenderDynamic();
+      //       m_vHitNonTrans[i]->RenderDynamic(lowcost);
       //       #ifdef DEBUG
       //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
       //       assert(initial_state.state == live_state.state);
@@ -5663,7 +5672,7 @@ void Player::DrawDynamics(bool onlyBalls)
       // for (size_t i = 0; i < m_vHitTrans.size(); ++i)
       //    if (!m_vHitTrans[i]->IsDMD())
       //    {
-      //       m_vHitTrans[i]->RenderDynamic();
+      //       m_vHitTrans[i]->RenderDynamic(lowcost);
       //       #ifdef DEBUG
       //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
       //       assert(initial_state.state == live_state.state);
@@ -5676,7 +5685,7 @@ void Player::DrawDynamics(bool onlyBalls)
       // for (size_t i = 0; i < m_vHitNonTrans.size(); ++i) // NonTrans is correct as DMDs are always sorted in there
       //    if (m_vHitNonTrans[i]->IsDMD())
       //    {
-      //       m_vHitNonTrans[i]->RenderDynamic();
+      //       m_vHitNonTrans[i]->RenderDynamic(lowcost);
       //       #ifdef DEBUG
       //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
       //       assert(initial_state.state == live_state.state);
@@ -5698,20 +5707,20 @@ void Player::DrawDynamics(bool onlyBalls)
       // Draw non-transparent Primitives.
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (m_vHitNonTrans[i]->HitableGetItemType() == eItemPrimitive)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Primitives_NT);
 
       // Draw non-transparent Walls, Ramps, Rubbers.
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (m_vHitNonTrans[i]->HitableGetItemType() == eItemSurface || m_vHitNonTrans[i]->HitableGetItemType() == eItemRamp || m_vHitNonTrans[i]->HitableGetItemType() == eItemRubber)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Walls_Ramps_Rubbers_NT);
 
       // Else.
       m_render_mask |= TRANSPARENT_DMD_PASS;
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (m_vHitNonTrans[i]->IsDMD() && m_vHitNonTrans[i]->HitableGetItemType() == eItemFlasher)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
       m_render_mask &= ~TRANSPARENT_DMD_PASS;
 
       DrawBalls();
@@ -5719,43 +5728,43 @@ void Player::DrawDynamics(bool onlyBalls)
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (m_vHitNonTrans[i]->HitableGetItemType() != eItemPrimitive && m_vHitNonTrans[i]->HitableGetItemType() != eItemSurface && m_vHitNonTrans[i]->HitableGetItemType() != eItemRamp
             && m_vHitNonTrans[i]->HitableGetItemType() != eItemRubber)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
 
       for (size_t i = 0; i < m_vHitTrans.size(); ++i)
          if (m_vHitTrans[i]->HitableGetItemType() != eItemPrimitive && m_vHitTrans[i]->HitableGetItemType() != eItemSurface && m_vHitTrans[i]->HitableGetItemType() != eItemRamp
             && m_vHitTrans[i]->HitableGetItemType() != eItemRubber && m_vHitTrans[i]->HitableGetItemType() != eItemLight && m_vHitTrans[i]->HitableGetItemType() != eItemFlasher)
-            m_vHitTrans[i]->RenderDynamic();
+            m_vHitTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Else);
 
       // Draw transparent Walls, Ramps, Rubbers.
       for (size_t i = 0; i < m_vHitTrans.size(); ++i)
          if (m_vHitTrans[i]->HitableGetItemType() == eItemSurface || m_vHitTrans[i]->HitableGetItemType() == eItemRamp || m_vHitTrans[i]->HitableGetItemType() == eItemRubber)
-            m_vHitTrans[i]->RenderDynamic();
+            m_vHitTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Walls_Ramps_Rubbers_T);
 
       // Draw transparent Primitives.
       for (size_t i = 0; i < m_vHitTrans.size(); ++i)
          if (m_vHitTrans[i]->HitableGetItemType() == eItemPrimitive)
-            m_vHitTrans[i]->RenderDynamic();
+            m_vHitTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Primitives_T);
 
       // Draw Lights.
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i) //!! not necessary??!
          if (m_vHitNonTrans[i]->HitableGetItemType() == eItemLight)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
       for (size_t i = 0; i < m_vHitTrans.size(); ++i)
          if (m_vHitTrans[i]->HitableGetItemType() == eItemLight)
-            m_vHitTrans[i]->RenderDynamic();
+            m_vHitTrans[i]->RenderDynamic(lowcost);
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Lights);
 
       // Draw Flashers.
       for (size_t i = 0; i < m_vHitTrans.size(); ++i)
          if (!m_vHitTrans[i]->IsDMD() && m_vHitTrans[i]->HitableGetItemType() == eItemFlasher)
-            m_vHitTrans[i]->RenderDynamic();
+            m_vHitTrans[i]->RenderDynamic(lowcost);
       m_render_mask |= TRANSPARENT_DMD_PASS;
       for (size_t i = 0; i < m_vHitNonTrans.size(); ++i)
          if (m_vHitNonTrans[i]->IsDMD() && m_vHitNonTrans[i]->HitableGetItemType() == eItemFlasher)
-            m_vHitNonTrans[i]->RenderDynamic();
+            m_vHitNonTrans[i]->RenderDynamic(lowcost);
       m_render_mask &= ~TRANSPARENT_DMD_PASS;
       m_pin3d.m_gpu_profiler.Timestamp(GTS_Flashers);
 

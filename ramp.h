@@ -186,7 +186,7 @@ private:
    void AddWallLineSeg(vector<HitObject*> &pvho, const Vertex2D &pv1, const Vertex2D &pv2, const bool pv3_exists, const float height1, const float height2, const float wallheight);
    void SetupHitObject(vector<HitObject*> &pvho, HitObject * obj);
 
-   void RenderRamp(const Material * const mat);
+   void RenderRamp(const Material * const mat, bool lowcost);
    void CreateWire(const int numRings, const int numSegments, const Vertex2D * const midPoints, Vertex3D_NoTex2 * const rgvBuf);
    void GenerateWireMesh(Vertex3D_NoTex2 **meshBuf, Vertex3D_NoTex2 **meshBuf2);
    void GenerateRampMesh(Vertex3D_NoTex2 **meshBuf);

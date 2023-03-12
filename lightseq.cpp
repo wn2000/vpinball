@@ -204,7 +204,7 @@ void LightSeq::EndPlay()
    IEditable::EndPlay();
 }
 
-void LightSeq::RenderDynamic()
+void LightSeq::RenderDynamic(bool)
 {
 }
 

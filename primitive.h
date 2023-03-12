@@ -309,7 +309,7 @@ public:
    void CreateRenderGroup(const Collection * const collection);
    void RecalculateMatrices();
    void TransformVertices();
-   void RenderObject();
+   void RenderObject(bool lowcost);
 
    void setInPlayState(const bool newVal);
 
