@@ -5669,16 +5669,16 @@ void Player::DrawDynamics(bool onlyBalls, bool lowcost)
       m_limiter.Execute(m_pin3d.m_pd3dPrimaryDevice); //!! move below other draw calls??
 
       // Draw transparent objects. No DMD's
-      // for (size_t i = 0; i < m_vHitTrans.size(); ++i)
-      //    if (!m_vHitTrans[i]->IsDMD())
-      //    {
-      //       m_vHitTrans[i]->RenderDynamic(lowcost);
-      //       #ifdef DEBUG
-      //       m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
-      //       assert(initial_state.state == live_state.state);
-      //       assert(initial_state.depth_bias == live_state.depth_bias);
-      //       #endif
-      //    }
+      for (size_t i = 0; i < m_vHitTrans.size(); ++i)
+         if (!m_vHitTrans[i]->IsDMD())
+         {
+            m_vHitTrans[i]->RenderDynamic(lowcost);
+            #ifdef DEBUG
+            m_pin3d.m_pd3dPrimaryDevice->CopyRenderStates(true, live_state);
+            assert(initial_state.state == live_state.state);
+            assert(initial_state.depth_bias == live_state.depth_bias);
+            #endif
+         }
 
       // Draw only transparent DMD's
       // m_render_mask |= TRANSPARENT_DMD_PASS;
