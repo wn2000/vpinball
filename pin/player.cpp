@@ -2172,6 +2172,48 @@ void Player::InitStatic()
       m_pin3d.m_pd3dPrimaryDevice->ReleaseAORenderTargets();
    }
 
+   // Pre-apply shader to the static image
+   std::unique_ptr<RenderTarget> tmpOutput(m_pin3d.m_pddsStatic->Duplicate("TmpOutput"));
+   tmpOutput->Activate();
+   m_pin3d.m_pd3dPrimaryDevice->Clear(clearType::TARGET, 0, 1, 0);
+   m_pin3d.m_pd3dPrimaryDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, RenderDevice::RS_FALSE);
+   m_pin3d.m_pd3dPrimaryDevice->SetRenderStateCulling(RenderDevice::CULL_NONE);
+   m_pin3d.m_pd3dPrimaryDevice->SetRenderState(RenderDevice::ZWRITEENABLE, RenderDevice::RS_FALSE);
+   m_pin3d.m_pd3dPrimaryDevice->SetRenderState(RenderDevice::ZENABLE, RenderDevice::RS_FALSE);
+
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTexture(SHADER_tex_fb_unfiltered, m_pin3d.m_pddsStatic->GetColorSampler());
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTexture(SHADER_tex_fb_filtered, m_pin3d.m_pddsStatic->GetColorSampler());
+   int render_w = m_pin3d.m_pddsStatic->GetWidth();
+   int render_h = m_pin3d.m_pddsStatic->GetHeight();
+
+   // if (m_ptable->m_bloom_strength > 0 && !m_bloomOff)
+   // {
+   DrawBulbLightBuffer();
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTexture(SHADER_tex_bloom, m_pin3d.m_pd3dPrimaryDevice->GetBloomBufferTexture()->GetColorSampler());
+   // }
+
+   // Texture used for LUT color grading must be treated as if they were linear
+   Texture * const pin = m_ptable->GetImage(m_ptable->m_imageColorGrade);
+   if (pin)
+      m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTexture(SHADER_tex_color_lut, pin, SF_BILINEAR, SA_CLAMP, SA_CLAMP, true); // FIXME honor the linear RGB in VR
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_color_grade, pin != nullptr);
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_do_dither, !m_ditherOff);
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetBool(SHADER_do_bloom, true);
+    // m_ptable->m_bloom_strength > 0 && !m_bloomOff);
+
+   const float jitter = (float)((msec() & 2047) / 1000.0);
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetVector(SHADER_w_h_height, (float)(1.0 / render_w), (float)(1.0 / render_h),
+      (float)jitter /* radical_inverse(jittertime) * 11.0f */, (float)jitter /*sobol(jittertime)*13.0f*/); // jitter for dither pattern
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->SetTechnique(
+      SHADER_TECHNIQUE_fb_tonemap);
+      // SHADER_TECHNIQUE_fb_tonemap_no_filterRGB);
+
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->Begin();
+   m_pin3d.m_pd3dPrimaryDevice->DrawFullscreenTexturedQuad();
+   m_pin3d.m_pd3dPrimaryDevice->FBShader->End();
+
+   tmpOutput->CopyTo(m_pin3d.m_pddsStatic, true, false);
+
    g_pvp->ProfileLog("AO/Static PreRender End"s);
    
    m_render_mask &= ~STATIC_PREPASS;
